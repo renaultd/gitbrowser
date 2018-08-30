@@ -1,0 +1,172 @@
+<style type="text/css" media="screen">
+  .warning_sel {
+      position:   absolute;
+      background: rgba(255,255,100,0.5);
+      z-index:    20
+  }
+  .error_sel {
+      position:   absolute;
+      background: rgba(255,50,50,0.5);
+      z-index:    40
+  }
+  .ace_selection {
+      background: rgba(0,0,0,0.1) !important;
+  }
+</style>
+
+<div style="display:flex">
+
+  <div style="display: flex
+              flex-direction: column;">
+    <div>
+      Repository&nbsp;: <%= @repository.address %>
+      <input type="hidden" id="repository_id" value="<%= @repository.id %>"/>
+      <input type="hidden" id="revision" value=""/>
+      <input type="hidden" id="filename" value=""/>
+    </div>
+
+    <div>
+      <%= select(:revision, :selector, @revisions,
+          { include_blank: true },
+          { onChange: "fetch_file_list()".html_safe })
+          %>
+    </div>
+
+    <div style="height: 500px;">
+      <ul id="file_tree">
+
+      </ul>
+    </div>
+  </div>
+
+  <div id="viewer" style="height: 900px; width: 900px">
+
+  </div>
+
+  <div>
+    <button id="warning_button">Highlight warning</button>
+    <button id="error_button">Highlight error</button>
+
+    <div id="comments">
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+  var viewer = ace.edit("viewer");
+  var markers = [];
+  viewer.setReadOnly(true);
+  viewer.$blockScrolling = Infinity; // fix logs
+  viewer.setOptions({
+      highlightActiveLine: false,
+      fontSize: "13pt",
+      theme: 'ace/theme/chrome',
+  });
+  function fetch_file_list() {
+      const revision = $('#revision_selector').val();
+      $.ajax({
+          dataType: 'json',
+          url : '/repositories/fetch_file_list' +
+              '?id=' + $("#repository_id").val() +
+              '&revision=' + revision })
+          .done(function(data) {
+              $("#revision").val(revision);
+              load_files(data);
+          });
+  }
+
+  function clear_markers() {
+      markers.forEach( (m) => {
+          viewer.getSession().removeMarker(m);
+      });
+      // markers = [];
+  }
+
+  function load_file(event) {
+      const filename = $(event.target).data("file");
+      const revision = $("#revision").val();
+      $.ajax({
+          dataType: 'text',
+          url : '/repositories/fetch_file' +
+              '?id=' + $("#repository_id").val() +
+              '&revision=' + revision +
+              "&file=" + filename })
+          .done(function(data) {
+              $("#filename").val(filename);
+              viewer.setValue(data);
+              viewer.session.setMode("ace/mode/python");
+              viewer.clearSelection();
+              viewer.navigateFileStart();
+              clear_markers();
+              load_comments(filename, revision);
+          });
+  }
+
+  function load_files(data) {
+      $("#file_tree").empty();
+      const revision = $("#revision_selector").val();
+      const keys = Object.keys(data);
+
+      function fill_level(level) {
+          const els = keys.filter((el) => data[el].parent == level);
+          els.forEach(function (el) {
+              const txtel = data[el].name;
+              const domel = (level == "") ? $("#file_tree") : $("ul[data-file='" + level + "']");
+              if(data[el].is_dir) {
+                  domel.append($('<li>').text(txtel))
+                      .append($('<ul data-file="' + el + '">'));
+                  fill_level(el);
+              } else {
+                  const tel = "<a data-file='" + el + "'>" + txtel + "</a>";
+                  domel.append($('<li>').html(tel));
+              }
+          });
+      }
+
+      fill_level("");
+      $("#file_tree a").click(load_file);
+  }
+
+  function add_comment(label) {
+      return function () {
+          var range = viewer.getSelectionRange();
+          var marker = viewer.session.addMarker(range, label, "line");
+          markers.push(marker);
+          $.ajax({
+              url : '/repositories/add_comment' +
+                  '?id=' + $("#repository_id").val() +
+                  '&revision=' + $("#revision").val() +
+                  "&file=" + $("#filename").val() +
+                  "&range=" + JSON.stringify(range)});
+      }
+  }
+
+  function load_comments(filename, revision) {
+      $.ajax({
+          dataType: 'json',
+          url : '/repositories/fetch_comments' +
+              '?id=' + $("#repository_id").val() +
+              '&revision=' + revision +
+              "&file=" + filename })
+          .done(function(data) {
+              $("#comments").html(JSON.stringify(data));
+              data.forEach((d) => {
+                  var Range = require("ace/range").Range;
+                  var r = new Range(d.range.start.row, d.range.start.column,
+                                    d.range.end.row,   d.range.end.column);
+                  var marker = viewer.session.addMarker(r, "warning_sel", "line");
+                  markers.push(marker);
+              });
+          });
+  }
+
+  <% if @selected_revision %>
+    $("#revision_selector").val("<%= @selected_revision %>");
+    fetch_file_list();
+  <% end %>
+
+  $("#warning_button").click(add_comment("warning_sel"));
+  $("#error_button").click(add_comment("error_sel"));
+</script>

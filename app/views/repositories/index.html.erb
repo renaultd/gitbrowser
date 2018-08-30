@@ -1,0 +1,26 @@
+<div style="display:flex">
+
+  <div style="display: flex
+              flex-direction: column;">
+    <div>
+      Repositories
+    </div>
+
+    <div>
+      <ul>
+        <% @repositories.all.each do |r| %>
+        <li>
+          <a href="/repositories/<%=r.id %>?revision=HEAD">
+            <%= r.address %>
+          </a>
+        </li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+
+  <div>
+
+  </div>
+
+</div>
