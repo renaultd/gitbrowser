@@ -41,7 +41,9 @@ class RepositoriesController < ApplicationController
   def fetch_file_list
     @revision = params[:revision]
     git_cmd = `git --git-dir #{@repository.address} ls-tree -r --name-only #{@revision}`
-    files = git_cmd.lines.collect(&:strip).select { |f| f.end_with?(".py") }
+    files = git_cmd.lines.collect(&:strip).select { |f|
+      Regexp.new(@repository.filter).match(f)
+    }
     @owns = FileOwnerships.new()
     files.each{ |f| @owns.add(f, false) }
     respond_to do |format|

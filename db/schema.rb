@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180830133435) do
+ActiveRecord::Schema.define(version: 20180830194416) do
 
   create_table "comments", force: :cascade do |t|
     t.integer "repository_id", null: false
@@ -22,6 +22,7 @@ ActiveRecord::Schema.define(version: 20180830133435) do
 
   create_table "repositories", force: :cascade do |t|
     t.string "address"
+    t.string "filter"
   end
 
 end

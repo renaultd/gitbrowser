@@ -11,7 +11,7 @@
         <% @repositories.all.each do |r| %>
         <li>
           <a href="/repositories/<%=r.id %>?revision=HEAD">
-            <%= r.address %>
+            <%= r.address %> (filter : <%= r.filter %>)
           </a>
         </li>
         <% end %>

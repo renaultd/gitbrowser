@@ -19,7 +19,7 @@
   <div style="display: flex
               flex-direction: column;">
     <div>
-      Repository&nbsp;: <%= @repository.address %>
+      <a href="/repositories/">Repository&nbsp;:</a> <%= @repository.address %>
       <input type="hidden" id="repository_id" value="<%= @repository.id %>"/>
       <input type="hidden" id="revision" value=""/>
       <input type="hidden" id="filename" value=""/>
