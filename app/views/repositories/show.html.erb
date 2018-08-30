@@ -1,4 +1,7 @@
 <style type="text/css" media="screen">
+  a.comment_line {
+      color: rgba(155,0,0,1);
+  }
   .warning_sel {
       position:   absolute;
       background: rgba(255,255,100,0.5);
@@ -119,7 +122,8 @@
                       .append($('<ul data-file="' + el + '">'));
                   fill_level(el);
               } else {
-                  const tel = "<a data-file='" + el + "'>" + txtel + "</a>";
+                  const tel = data[el].has_comm ? "<a data-file='" + el + "' class='comment_line'>" +
+			txtel + "</a>" : "<a data-file='" + el + "'>" + txtel + "</a>";
                   domel.append($('<li>').html(tel));
               }
           });

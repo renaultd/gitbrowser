@@ -13,16 +13,16 @@ class RepositoriesController < ApplicationController
       @owns
     end
 
-    def add(file, is_dir)
+    def add(file, is_dir, has_comm)
       sfile = file.split('/')
       if not(@owns.key?(file))
-        @owns[file] = { parent: "", is_dir: is_dir, name: sfile.last }
+        @owns[file] = { parent: "", is_dir: is_dir, name: sfile.last, has_comm: has_comm }
       end
       sfile.pop()
       if (sfile.length > 0)
         parent = sfile.join("/")
         @owns[file][:parent] = parent
-        self.add(parent, "true")
+        self.add(parent, "true", false)
       end
     end
 
@@ -44,8 +44,9 @@ class RepositoriesController < ApplicationController
     files = git_cmd.lines.collect(&:strip).select { |f|
       Regexp.new(@repository.filter).match(f)
     }
+    @comments = Comment.where(repository_id: @repository.id).collect(&:file).uniq
     @owns = FileOwnerships.new()
-    files.each{ |f| @owns.add(f, false) }
+    files.each{ |f| @owns.add(f, false, @comments.include?(f)) }
     respond_to do |format|
       format.js { render :json => @owns.owns }
     end
