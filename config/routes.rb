@@ -4,5 +4,6 @@ Rails.application.routes.draw do
   get '/repositories/fetch_comments' => "repositories#fetch_comments"
   get '/repositories/fetch_file' => "repositories#fetch_file"
   get '/repositories/fetch_file_list' => "repositories#fetch_file_list"
+  get '/repositories/del_comment' => "repositories#del_comment"
   resources :repositories
 end

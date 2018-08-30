@@ -63,11 +63,19 @@ class RepositoriesController < ApplicationController
     @range    = JSON.parse(params[:range])
     @revision = params[:revision]
     @file     = params[:file]
+    @type     = params[:type]
     c = Comment.new(repository_id: @repository.id,
                     file: @file,
                     revision: @revision,
-                    range: @range)
+                    range: @range,
+                    ctype: @type)
     c.save
+    render :json => c.to_json
+  end
+
+  def del_comment
+    @comment = Comment.find(params[:comment_id])
+    @comment.destroy
   end
 
   def fetch_comments
