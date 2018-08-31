@@ -144,6 +144,7 @@
 	    "(l. " + comment.range.start.row +
             "-" + comment.range.end.row + ")";
       $("#comments").append($("<div id='comment_" + comment.id + "'>").html(div));
+      $("a[data-file='" + comment.file + "']").addClass("comment_line");
       markers[comment.id.toString()] = marker;
       $("#comment_" + comment.id + " a").click(remove_comment);
       $("a[data-file='" + comment.file + "']").addClass("comment_line");
