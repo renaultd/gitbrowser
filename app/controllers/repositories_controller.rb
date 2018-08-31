@@ -41,9 +41,10 @@ class RepositoriesController < ApplicationController
   def fetch_file_list
     @revision = params[:revision]
     git_cmd = `git --git-dir #{@repository.address} ls-tree -r --name-only #{@revision}`
-    files = git_cmd.lines.collect(&:strip).select { |f|
+    files = git_cmd.lines.collect(&:strip)
+    files = files.select { |f|
       Regexp.new(@repository.filter).match(f)
-    }
+    } if @repository.filter
     @comments = Comment.where(repository_id: @repository.id).collect(&:file).uniq
     @owns = FileOwnerships.new()
     files.each{ |f| @owns.add(f, false, @comments.include?(f)) }
