@@ -143,6 +143,7 @@
             "-" + comment.range.end.row + ")";
       $("#comments").append($("<div id='comment_" + comment.id + "'>").html(div));
       markers[comment.id.toString()] = marker;
+      $("#comment_" + comment.id + " a").click(remove_comment);
   }
 
   function save_comment(type) {
@@ -156,9 +157,7 @@
                   "&file=" + $("#filename").val() +
                   "&range=" + JSON.stringify(range) +
                   "&type=" + type})
-              .done(function(comment) {
-                  display_new_comment(comment);
-              });
+              .done(display_new_comment);
       }
   }
 
@@ -184,10 +183,7 @@
               "&file=" + filename })
           .done(function(data) {
               $("#comments").empty();
-              data.forEach((d) => {
-                  display_new_comment(d,);
-              });
-              $("#comments a").click(remove_comment);
+              data.forEach(display_new_comment);
           });
   }
 
