@@ -10,14 +10,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180830201313) do
+ActiveRecord::Schema.define(version: 20180903211755) do
 
   create_table "comments", force: :cascade do |t|
     t.integer "repository_id", null: false
     t.string "file", null: false
     t.string "revision", null: false
     t.string "range"
-    t.string "comments"
+    t.string "description"
     t.integer "ctype"
   end
 

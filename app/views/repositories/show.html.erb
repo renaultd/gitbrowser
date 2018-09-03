@@ -139,7 +139,9 @@
                               comment.range.end.row,   comment.range.end.column);
       const marker = viewer.session.addMarker(range, comment.ctype + "_sel", "line");
       const div = "<a data-comment_id='" + comment.id + "'>&#10060;</a> " +
-            comment.comments + "(l. " + comment.range.start.row +
+	    "<input type='text' value='" + comment.description +
+	    "' onChange='save_comment_description(" + comment.id + ")'/>" +
+	    "(l. " + comment.range.start.row +
             "-" + comment.range.end.row + ")";
       $("#comments").append($("<div id='comment_" + comment.id + "'>").html(div));
       markers[comment.id.toString()] = marker;
@@ -147,7 +149,7 @@
       $("a[data-file='" + comment.file + "']").addClass("comment_line");
   }
 
-  function save_comment(type) {
+  function save_new_comment(type) {
       return function () {
           const range = viewer.getSelectionRange();
           $.ajax({
@@ -160,6 +162,17 @@
                   "&type=" + type})
               .done(display_new_comment);
       }
+  }
+
+  function save_comment_description(comment_id) {
+      const text = $("#comments div#comment_" + comment_id + " input").val();
+      $.ajax({
+              dataType: 'json',
+          url: '/repositories/save_comment_description' +
+	      '?id=' + $("#repository_id").val() +
+	      '&comment_id=' + comment_id +
+	      '&description=' + text })
+	  .done(() => alert("saved"));
   }
 
   function remove_comment(event) {
@@ -195,6 +208,6 @@
     fetch_file_list();
   <% end %>
 
-  $("#warning_button").click(save_comment("warning"));
-  $("#error_button").click(save_comment("error"));
+  $("#warning_button").click(save_new_comment("warning"));
+  $("#error_button").click(save_new_comment("error"));
 </script>

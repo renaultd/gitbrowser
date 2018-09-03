@@ -78,6 +78,12 @@ class RepositoriesController < ApplicationController
     @comment.destroy
   end
 
+  def save_comment_description
+    @comment = Comment.find(params[:comment_id])
+    @comment.description = params[:description]
+    @comment.save
+  end
+
   def fetch_comments
     @revision = params[:revision]
     @file     = params[:file]
