@@ -31,7 +31,7 @@
     <div>
       <%= select(:revision, :selector, @revisions,
           { include_blank: true },
-          { onChange: "fetch_file_list()".html_safe })
+          { onChange: "fetch_file_list()" })
           %>
     </div>
 
@@ -144,6 +144,7 @@
       $("#comments").append($("<div id='comment_" + comment.id + "'>").html(div));
       markers[comment.id.toString()] = marker;
       $("#comment_" + comment.id + " a").click(remove_comment);
+      $("a[data-file='" + comment.file + "']").addClass("comment_line");
   }
 
   function save_comment(type) {
@@ -171,6 +172,8 @@
           .done(function () {
               $("#comment_" + comment_id).remove();
               viewer.getSession().removeMarker(markers[comment_id.toString()]);
+	      if ($("#comments a").length == 0)
+		  $("a[data-file='" + $("#filename").val() + "']").removeClass("comment_line");
           });
   }
 
