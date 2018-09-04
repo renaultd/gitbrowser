@@ -139,12 +139,11 @@
                               comment.range.end.row,   comment.range.end.column);
       const marker = viewer.session.addMarker(range, comment.ctype + "_sel", "line");
       const div = "<a data-comment_id='" + comment.id + "'>&#10060;</a> " +
-	    "<input type='text' value='" + comment.description +
-	    "' onChange='save_comment_description(" + comment.id + ")'/>" +
-	    "(l. " + comment.range.start.row +
+            "<input type='text' value='" + comment.description +
+            "' onChange='save_comment_description(" + comment.id + ")'/>" +
+            "(l. " + comment.range.start.row +
             "-" + comment.range.end.row + ")";
       $("#comments").append($("<div id='comment_" + comment.id + "'>").html(div));
-      $("a[data-file='" + comment.file + "']").addClass("comment_line");
       markers[comment.id.toString()] = marker;
       $("#comment_" + comment.id + " a").click(remove_comment);
       $("a[data-file='" + comment.file + "']").addClass("comment_line");
@@ -170,10 +169,10 @@
       $.ajax({
               dataType: 'json',
           url: '/repositories/save_comment_description' +
-	      '?id=' + $("#repository_id").val() +
-	      '&comment_id=' + comment_id +
-	      '&description=' + text })
-	  .done(() => alert("saved"));
+              '?id=' + $("#repository_id").val() +
+              '&comment_id=' + comment_id +
+              '&description=' + text })
+          .done(() => alert("saved"));
   }
 
   function remove_comment(event) {
@@ -186,8 +185,8 @@
           .done(function () {
               $("#comment_" + comment_id).remove();
               viewer.getSession().removeMarker(markers[comment_id.toString()]);
-	      if ($("#comments a").length == 0)
-		  $("a[data-file='" + $("#filename").val() + "']").removeClass("comment_line");
+              if ($("#comments a").length == 0)
+                  $("a[data-file='" + $("#filename").val() + "']").removeClass("comment_line");
           });
   }
 
