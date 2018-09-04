@@ -15,6 +15,26 @@
   .ace_selection {
       background: rgba(0,0,0,0.1) !important;
   }
+  .viewer_tooltip {
+      background-color: #FCC;
+      border: 1px solid gray;
+      border-radius: 1px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      color: black;
+      max-width: 100%;
+      padding: 3px 4px;
+      position: absolute;
+      z-index: 999999;
+      box-sizing: border-box;
+      cursor: default;
+      white-space: pre;
+      word-wrap: break-word;
+      line-height: normal;
+      font-style: normal;
+      font-weight: normal;
+      letter-spacing: normal;
+      pointer-events: none;
+  }
 </style>
 
 <div style="display:flex">
@@ -46,6 +66,10 @@
 
   </div>
 
+  <div id="tooltip" class="viewer_tooltip" style="display:none">
+
+  </div>
+
   <div>
     <button id="warning_button">Highlight warning</button>
     <button id="error_button">Highlight error</button>
@@ -59,7 +83,7 @@
 
 <script>
   var viewer = ace.edit("viewer");
-  var markers = {};
+  var markers = {}; // Dict to centralize the comments
   viewer.setReadOnly(true);
   viewer.$blockScrolling = Infinity; // fix logs
   viewer.setOptions({
@@ -81,8 +105,8 @@
   }
 
   function clear_markers() {
-      Object.values(markers).forEach( (m) => {
-          viewer.getSession().removeMarker(m);
+      Object.keys(markers).forEach( (m) => {
+          viewer.getSession().removeMarker(markers[m].id);
       });
       markers = {};
   }
@@ -144,7 +168,9 @@
             "(l. " + comment.range.start.row +
             "-" + comment.range.end.row + ")";
       $("#comments").append($("<div id='comment_" + comment.id + "'>").html(div));
-      markers[comment.id.toString()] = marker;
+      markers[comment.id] = { id: marker,
+                              range: range,
+                              desc: comment.description };
       $("#comment_" + comment.id + " a").click(remove_comment);
       $("a[data-file='" + comment.file + "']").addClass("comment_line");
   }
@@ -172,7 +198,10 @@
               '?id=' + $("#repository_id").val() +
               '&comment_id=' + comment_id +
               '&description=' + text })
-          .done(() => alert("saved"));
+          .done(() => {
+              markers[comment_id].desc = text;
+              alert("saved");
+          });
   }
 
   function remove_comment(event) {
@@ -184,7 +213,7 @@
               '&comment_id=' + comment_id })
           .done(function () {
               $("#comment_" + comment_id).remove();
-              viewer.getSession().removeMarker(markers[comment_id.toString()]);
+              viewer.getSession().removeMarker(markers[comment_id].id);
               if ($("#comments a").length == 0)
                   $("a[data-file='" + $("#filename").val() + "']").removeClass("comment_line");
           });
@@ -203,6 +232,19 @@
           });
   }
 
+  function update_tooltip(position, text){
+        var div = $('#tooltip')[0];
+        div.style.left = position.pageX + 'px';
+        div.style.top = position.pageY + 'px';
+        if (text) {
+                div.style.display = "block";
+                div.innerText = text;
+        } else {
+                div.style.display = "none";
+                div.innerText = "";
+        }
+  }
+
   <% if @selected_revision %>
     $("#revision_selector").val("<%= @selected_revision %>");
     fetch_file_list();
@@ -210,4 +252,20 @@
 
   $("#warning_button").click(save_new_comment("warning"));
   $("#error_button").click(save_new_comment("error"));
+
+  viewer.on("mousemove", function (e){
+      var pos = e.getDocumentPosition();
+      if (pos) {
+          const up = Object.keys(markers).some((m) => {
+              const mark = markers[m];
+              if (mark.range.contains(pos.row, pos.column)) {
+                  const pixelpos = viewer.renderer.textToScreenCoordinates(pos);
+                  pixelpos.pageY += viewer.renderer.lineHeight;
+                  update_tooltip(pixelpos, mark.desc);
+                  return true;
+              } else return false;
+          });
+          if (!up) update_tooltip(pos);
+      }
+  });
 </script>
