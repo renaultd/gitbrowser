@@ -36,8 +36,12 @@
       pointer-events: none;
   }
   .viewer_overlay {
-	position:absolute;
-	z-index: 100;
+        position:absolute;
+        z-index: 100;
+        padding: 5px;
+        max-width: 400px;
+        border: 1px solid black;
+        background-color: rgba(255, 255, 255, 0.7);
   }
 </style>
 
@@ -70,9 +74,9 @@
 
   </div>
 
-  <canvas id="overlay" class="viewer_overlay" width="200" height="40">
+  <div id="overlay" class="viewer_overlay">
 
-  </canvas>
+  </div>
 
   <div id="tooltip" class="viewer_tooltip" style="display:none">
 
@@ -140,7 +144,7 @@
               "&file=" + filename })
           .done(function(data) {
               $("#filename").val(filename);
-	      init_viewer(data);
+              init_viewer(data);
               load_comments(filename, revision);
           });
   }
@@ -243,9 +247,9 @@
           .done(function(data) {
               $("#comments").empty();
               data.forEach(display_new_comment);
-	      if (Object.values(markers).length  > 0) {
-		  create_overlay(Object.values(markers)[0]);
-	      } else $("#overlay").css("display", "none");
+              if (Object.values(markers).length  > 0) {
+                  create_overlay(Object.values(markers)[0]);
+              } else $("#overlay").css("display", "none");
           });
   }
 
@@ -275,20 +279,13 @@
       var anchor = document.createAnchor(marker.range.start.row, 0);
 
       var over = $("#overlay");
-      var ctx = over[0].getContext('2d');
-      ctx.fillStyle="#FFCCCC";
-      ctx.fillRect(0, 0, 200, 40);
-      ctx.strokeRect(0, 0, 200, 40);
-      ctx.fillStyle="#000000";
-      ctx.textAlign="center";
-      ctx.font="17px sans";
-      ctx.fillText(marker.desc,100,20);
+      over.html(marker.desc); // Set the description
 
       update_overlay(viewer.renderer.
-		     textToScreenCoordinates(anchor.getPosition()));
+                     textToScreenCoordinates(anchor.getPosition()));
       session.on("changeScrollTop", function(scrollTop){
-      	  update_overlay(viewer.renderer.
-      			 textToScreenCoordinates(anchor.getPosition()));
+          update_overlay(viewer.renderer.
+                         textToScreenCoordinates(anchor.getPosition()));
       });
   }
 
