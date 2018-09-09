@@ -34,8 +34,12 @@ class RepositoriesController < ApplicationController
   end
 
   def show
-    git_cmd = `git --git-dir #{@repository.address} rev-list --max-count=10 HEAD`
-    @revisions = [ "HEAD" ] + git_cmd.lines.collect(&:strip)
+    git_cmd = `git --git-dir #{@repository.address} log --pretty="format:%H,%an,%ad" --date=short --max-count=10 HEAD`
+    @revisions = [ { revision: "HEAD", author: "", date: "" } ] +
+                 git_cmd.lines.collect { |l|
+      arr = l.strip.split(",")
+      { revision: arr[0], author: arr[1], date: arr[2] }
+    }
     @selected_revision = params[:revision]
     @selected_file     = params[:file]
   end

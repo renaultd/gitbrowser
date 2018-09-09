@@ -43,7 +43,7 @@
       border: 1px solid black;
   }
   .viewer_overlay_warning {
-      background: rgba(255,255,50,0.6);
+      background: rgba(255,255,50,0.7);
   }
   .viewer_overlay_error {
       background: rgba(255,100,75,0.5);
@@ -62,10 +62,13 @@
     </div>
 
     <div>
-      <%= select(:revision, :selector, @revisions,
-          { include_blank: true },
-          { onChange: "fetch_file_list()" })
-          %>
+      <select id="revision_selector" onChange="fetch_file_list()">
+	<% @revisions.each do |r| %>
+	<option value="<%= r[:revision] %>">
+	  <%= r[:date] %> - <%= r[:author] %>
+	</option>
+        <% end %>
+      </select>
     </div>
 
     <div style="height: 500px;">
