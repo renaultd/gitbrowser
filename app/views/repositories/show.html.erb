@@ -2,18 +2,18 @@
   a.comment_line {
       color: rgba(155,0,0,1);
   }
-  .warning_sel {
+  .ace_selection {
+      background: rgba(0,0,0,0.1) !important;
+  }
+  .viewer_sel_warning {
       position:   absolute;
       background: rgba(255,255,100,0.5);
       z-index:    20
   }
-  .error_sel {
+  .viewer_sel_error {
       position:   absolute;
-      background: rgba(255,50,50,0.5);
+      background: rgba(255,75,50,0.3);
       z-index:    40
-  }
-  .ace_selection {
-      background: rgba(0,0,0,0.1) !important;
   }
   .viewer_tooltip {
       background-color: #FCC;
@@ -39,9 +39,14 @@
       position:absolute;
       z-index: 100;
       padding: 5px;
-      max-width: 400px;
+      max-width: 300px;
       border: 1px solid black;
-      background-color: rgba(255, 255, 255, 0.7);
+  }
+  .viewer_overlay_warning {
+      background: rgba(255,255,50,0.6);
+  }
+  .viewer_overlay_error {
+      background: rgba(255,100,75,0.5);
   }
 </style>
 
@@ -187,7 +192,9 @@
                               comment.range.start.column,
                               comment.range.end.row,
                               comment.range.end.column);
-      const marker = viewer.session.addMarker(range, comment.ctype + "_sel", "line");
+      const marker = viewer.session.addMarker(range,
+                                              "viewer_sel_" + comment.ctype,
+                                              "line");
       const div = "<a data-comment_id='" + comment.id + "'>&#10060;</a> " +
             "<input type='text' value='" + comment.description +
             "' onChange='save_comment_description(" + comment.id + ")'/>" +
@@ -196,6 +203,7 @@
       $("#comments").append($("<div id='comment_" + comment.id + "'>").html(div));
       comments[comment.id] = { marker_id: marker,
                                range: range,
+                               ctype: comment.ctype,
                                desc: comment.description };
       $("#comment_" + comment.id + " a").click(destroy_comment);
       $("a[data-file='" + comment.file + "']").addClass("comment_line");
@@ -241,10 +249,10 @@
               '?id=' + $("#repository_id").val() +
               '&comment_id=' + comment_id })
           .done(function () {
-	      clear_comment(comment_id);
+              clear_comment(comment_id);
               if ($("#comments a").length == 0)
                   $("a[data-file='" + $("#filename").val() + "']").
-		     removeClass("comment_line");
+                     removeClass("comment_line");
           });
   }
 
@@ -277,7 +285,7 @@
   function update_overlay(id, position){
       var div = $("#overlay_" + id)[0];
       div.style.display = "";
-      div.style.left = (position.pageX + 700) + 'px';
+      div.style.left = (position.pageX + 800) + 'px'; // 700 is the offset
       div.style.top = position.pageY + 'px';
   }
 
@@ -288,7 +296,8 @@
       var anchor = document.createAnchor(comment.range.start.row, 0);
       comment.anchor = anchor;
 
-      $('<div id="overlay_' + id + '" class="viewer_overlay"></div>').
+      $('<div id="overlay_' + id + '" class="viewer_overlay viewer_overlay_' +
+        comment.ctype + '"></div>').
           appendTo('#overlays');
       var over = $("#overlay_" + id);
       over.html(comment.desc); // Set the description
