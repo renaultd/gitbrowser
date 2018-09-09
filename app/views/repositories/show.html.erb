@@ -74,7 +74,7 @@
 
   </div>
 
-  <div id="overlay" class="viewer_overlay">
+  <div id="overlays">
 
   </div>
 
@@ -95,7 +95,7 @@
 
 <script>
   var viewer = ace.edit("viewer");
-  var markers = {}; // Dict to centralize the comments
+  var comments = {}; // Dict to centralize the comments
   viewer.setReadOnly(true);
   viewer.$blockScrolling = Infinity; // fix logs
   viewer.setOptions({
@@ -118,11 +118,17 @@
           });
   }
 
-  function clear_markers() {
-      Object.keys(markers).forEach( (m) => {
-          viewer.getSession().removeMarker(markers[m].id);
-      });
-      markers = {};
+  function clear_comment(id) {
+      const comment = comments[id];
+      viewer.getSession().removeMarker(comment.marker_id);
+      comment.anchor.detach();
+      $("#comment_" + id).remove();
+      $("#overlay_" + id).remove();
+      delete comments[id];
+  }
+
+  function clear_comments() {
+      Object.keys(comments).forEach(clear_comment);
   }
 
   function init_viewer(data) {
@@ -130,11 +136,10 @@
       viewer.session.setMode("ace/mode/python");
       viewer.clearSelection();
       viewer.navigateFileStart();
-      clear_markers();
+      clear_comments();
   }
 
-  function load_file(filename) {
-      const revision = $("#revision").val();
+  function load_file(filename, revision) {
       $.ajax({
           dataType: 'text',
           url : '/repositories/fetch_file' +
@@ -172,13 +177,16 @@
 
       fill_level("");
       $("#file_tree a").click((event) =>
-			      load_file($(event.target).data("file")));
+                              load_file($(event.target).data("file"),
+                                        $("#revision").val()));
   }
 
-  function display_new_comment(comment) {
+  function create_new_comment(comment) {
       const Range = require("ace/range").Range;
-      const range = new Range(comment.range.start.row, comment.range.start.column,
-                              comment.range.end.row,   comment.range.end.column);
+      const range = new Range(comment.range.start.row,
+                              comment.range.start.column,
+                              comment.range.end.row,
+                              comment.range.end.column);
       const marker = viewer.session.addMarker(range, comment.ctype + "_sel", "line");
       const div = "<a data-comment_id='" + comment.id + "'>&#10060;</a> " +
             "<input type='text' value='" + comment.description +
@@ -186,11 +194,12 @@
             "(l. " + comment.range.start.row +
             "-" + comment.range.end.row + ")";
       $("#comments").append($("<div id='comment_" + comment.id + "'>").html(div));
-      markers[comment.id] = { id: marker,
-                              range: range,
-                              desc: comment.description };
-      $("#comment_" + comment.id + " a").click(remove_comment);
+      comments[comment.id] = { marker_id: marker,
+                               range: range,
+                               desc: comment.description };
+      $("#comment_" + comment.id + " a").click(destroy_comment);
       $("a[data-file='" + comment.file + "']").addClass("comment_line");
+      create_overlay(comment.id);
   }
 
   function save_new_comment(type) {
@@ -204,7 +213,7 @@
                   "&file=" + $("#filename").val() +
                   "&range=" + JSON.stringify(range) +
                   "&type=" + type})
-              .done(display_new_comment);
+              .done(create_new_comment);
       }
   }
 
@@ -217,12 +226,14 @@
               '&comment_id=' + comment_id +
               '&description=' + text })
           .done(() => {
-              markers[comment_id].desc = text;
+              const comment = comments[comment_id];
+              comment.desc = text;
+              $("#overlay_" + comment_id).html(comment.desc);
               alert("saved");
           });
   }
 
-  function remove_comment(event) {
+  function destroy_comment(event) {
       const comment_id = $(event.target).data("comment_id");
       $.ajax({
           dataType: 'json',
@@ -230,10 +241,10 @@
               '?id=' + $("#repository_id").val() +
               '&comment_id=' + comment_id })
           .done(function () {
-              $("#comment_" + comment_id).remove();
-              viewer.getSession().removeMarker(markers[comment_id].id);
+	      clear_comment(comment_id);
               if ($("#comments a").length == 0)
-                  $("a[data-file='" + $("#filename").val() + "']").removeClass("comment_line");
+                  $("a[data-file='" + $("#filename").val() + "']").
+		     removeClass("comment_line");
           });
   }
 
@@ -246,10 +257,7 @@
               "&file=" + filename })
           .done(function(data) {
               $("#comments").empty();
-              data.forEach(display_new_comment);
-              if (Object.values(markers).length  > 0) {
-                  create_overlay(Object.values(markers)[0]);
-              } else $("#overlay").css("display", "none");
+              data.forEach(create_new_comment);
           });
   }
 
@@ -266,27 +274,32 @@
   //       }
   // }
 
-  function update_overlay(position){
-      var div = document.getElementById("overlay");
+  function update_overlay(id, position){
+      var div = $("#overlay_" + id)[0];
       div.style.display = "";
       div.style.left = (position.pageX + 700) + 'px';
       div.style.top = position.pageY + 'px';
   }
 
-  function create_overlay(marker) {
+  function create_overlay(id) {
+      const comment = comments[id];
       var session = viewer.getSession();
       var document = session.getDocument();
-      var anchor = document.createAnchor(marker.range.start.row, 0);
+      var anchor = document.createAnchor(comment.range.start.row, 0);
+      comment.anchor = anchor;
 
-      var over = $("#overlay");
-      over.html(marker.desc); // Set the description
+      $('<div id="overlay_' + id + '" class="viewer_overlay"></div>').
+          appendTo('#overlays');
+      var over = $("#overlay_" + id);
+      over.html(comment.desc); // Set the description
 
-      update_overlay(viewer.renderer.
+      update_overlay(id, viewer.renderer.
                      textToScreenCoordinates(anchor.getPosition()));
       session.on("changeScrollTop", function(scrollTop){
-          update_overlay(viewer.renderer.
+          update_overlay(id, viewer.renderer.
                          textToScreenCoordinates(anchor.getPosition()));
       });
+
   }
 
   <% if @selected_revision %>
@@ -294,7 +307,7 @@
     fetch_file_list();
   <% end %>
   <% if @selected_file %>
-    load_file("<%= @selected_file %>");
+    load_file("<%= @selected_file %>", "<%= @selected_revision %>");
   <% end %>
 
   $("#warning_button").click(save_new_comment("warning"));
@@ -303,8 +316,8 @@
   // viewer.on("mousemove", function (e){
   //     var pos = e.getDocumentPosition();
   //     if (pos) {
-  //         const up = Object.keys(markers).some((m) => {
-  //             const mark = markers[m];
+  //         const up = Object.keys(comments).some((m) => {
+  //             const mark = comments[m];
   //             if (mark.range.contains(pos.row, pos.column)) {
   //                 const pixelpos = viewer.renderer.textToScreenCoordinates(pos);
   //                 pixelpos.pageY += viewer.renderer.lineHeight;
