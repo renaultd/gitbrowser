@@ -36,12 +36,12 @@
       pointer-events: none;
   }
   .viewer_overlay {
-        position:absolute;
-        z-index: 100;
-        padding: 5px;
-        max-width: 400px;
-        border: 1px solid black;
-        background-color: rgba(255, 255, 255, 0.7);
+      position:absolute;
+      z-index: 100;
+      padding: 5px;
+      max-width: 400px;
+      border: 1px solid black;
+      background-color: rgba(255, 255, 255, 0.7);
   }
 </style>
 
@@ -133,8 +133,7 @@
       clear_markers();
   }
 
-  function load_file(event) {
-      const filename = $(event.target).data("file");
+  function load_file(filename) {
       const revision = $("#revision").val();
       $.ajax({
           dataType: 'text',
@@ -172,7 +171,8 @@
       }
 
       fill_level("");
-      $("#file_tree a").click(load_file);
+      $("#file_tree a").click((event) =>
+			      load_file($(event.target).data("file")));
   }
 
   function display_new_comment(comment) {
@@ -292,6 +292,9 @@
   <% if @selected_revision %>
     $("#revision_selector").val("<%= @selected_revision %>");
     fetch_file_list();
+  <% end %>
+  <% if @selected_file %>
+    load_file("<%= @selected_file %>");
   <% end %>
 
   $("#warning_button").click(save_new_comment("warning"));
