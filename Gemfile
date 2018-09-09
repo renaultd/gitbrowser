@@ -11,6 +11,7 @@ gem 'puma', '~> 3.7'
 gem 'sass-rails', '~> 5.0'
 # Rails
 gem 'jquery-rails'
+gem 'jquery-ui-rails'
 # Ace code editor
 gem 'ace-rails-ap'
 
