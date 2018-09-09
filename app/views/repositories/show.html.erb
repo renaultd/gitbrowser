@@ -75,7 +75,7 @@
     </div>
   </div>
 
-  <div id="viewer" style="height: 900px; width: 900px">
+  <div id="viewer" style="height: 900px; width: 900px; flex: 0 0 900px">
 
   </div>
 
@@ -90,6 +90,7 @@
   <div>
     <button id="warning_button">Highlight warning</button>
     <button id="error_button">Highlight error</button>
+    <button id="toggle_comments">Toggle comments</button>
 
     <div id="comments">
 
@@ -129,6 +130,7 @@
       comment.anchor.detach();
       $("#comment_" + id).remove();
       $("#overlay_" + id).remove();
+      viewer.session.removeListener("changeScrollTop", comment.callb);
       delete comments[id];
   }
 
@@ -304,11 +306,19 @@
 
       update_overlay(id, viewer.renderer.
                      textToScreenCoordinates(anchor.getPosition()));
-      session.on("changeScrollTop", function(scrollTop){
+      const callb = function(scrollTop){
           update_overlay(id, viewer.renderer.
                          textToScreenCoordinates(anchor.getPosition()));
-      });
+      };
+      session.on("changeScrollTop", callb);
+      comment.callb = callb;
+  }
 
+  function toggle_comments() {
+      if ($("#overlays").css("display") == "block")
+          $("#overlays").css("display", "none");
+      else
+          $("#overlays").css("display", "block");
   }
 
   <% if @selected_revision %>
@@ -321,6 +331,7 @@
 
   $("#warning_button").click(save_new_comment("warning"));
   $("#error_button").click(save_new_comment("error"));
+  $("#toggle_comments").click(toggle_comments);
 
   // viewer.on("mousemove", function (e){
   //     var pos = e.getDocumentPosition();
