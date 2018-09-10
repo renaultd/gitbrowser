@@ -2,6 +2,9 @@
   a.comment_line {
       color: rgba(155,0,0,1);
   }
+  a.goto_line {
+      color: rgba(0,50,200,1);
+  }
   .ace_selection {
       background: rgba(0,0,0,0.1) !important;
   }
@@ -218,8 +221,11 @@
                                               "viewer_sel_" + comment.ctype,
                                               "line");
       const div = "<div>" + comment.description +
-            "</div> (l. " + comment.range.start.row +
-            "-" + comment.range.end.row + ")";
+            "</div> <a class='goto_line' onclick='viewer.gotoLine(" +
+            (comment.range.start.row+1) + ", " +
+            comment.range.start.column +
+            ", false)'>(l. " + comment.range.start.row +
+            "-" + comment.range.end.row + ")</a>";
       $("#comments").append($("<div id='comment_" +
                               comment.id + "'>").html(div));
       comments[comment.id] = { marker_id: marker,
