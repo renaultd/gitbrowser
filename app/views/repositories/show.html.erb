@@ -303,9 +303,13 @@
 
   function update_overlay(id, position){
       var div = $("#overlay_" + id)[0];
-      div.style.display = "";
       div.style.left = (position.pageX + 800) + 'px'; // 800 is the offset
-      div.style.top = position.pageY + 'px';
+      if (position.pageY >= 900)
+          div.style.display = "none";
+      else {
+          div.style.display = "";
+          div.style.top = position.pageY + 'px';
+      }
   }
 
   function watch_area(event, elem) {
