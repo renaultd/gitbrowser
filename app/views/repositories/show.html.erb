@@ -57,6 +57,14 @@
   .viewer_overlay_error textarea {
       background: rgba(255,220,200,0.5);
   }
+  div.destroy_button {
+      position:absolute;
+      left:300px; top:-1px;
+      padding: 2px;
+      background: white;
+      border: 1px solid black;
+      z-index: 99;
+  }
 </style>
 
 <div style="display:flex">
@@ -209,8 +217,7 @@
       const marker = viewer.session.addMarker(range,
                                               "viewer_sel_" + comment.ctype,
                                               "line");
-      const div = "<a data-comment_id='" + comment.id + "'>&#10060;</a>" +
-            "<div>" + comment.description +
+      const div = "<div>" + comment.description +
             "</div> (l. " + comment.range.start.row +
             "-" + comment.range.end.row + ")";
       $("#comments").append($("<div id='comment_" +
@@ -219,7 +226,6 @@
                                range: range,
                                ctype: comment.ctype,
                                desc: comment.description };
-      $("#comment_" + comment.id + " a").click(destroy_comment);
       $("a[data-file='" + comment.file + "']").addClass("comment_line");
       create_overlay(comment.id);
   }
@@ -255,8 +261,7 @@
           });
   }
 
-  function destroy_comment(event) {
-      const comment_id = $(event.target).data("comment_id");
+  function destroy_comment(comment_id) {
       $.ajax({
           dataType: 'json',
           url: '/repositories/del_comment' +
@@ -318,9 +323,12 @@
       comment.anchor = anchor;
 
       $('<div id="overlay_' + id + '" class="viewer_overlay viewer_overlay_' +
-        comment.ctype + '"><textarea cols="40" data-comment="' + id +
+        comment.ctype + '">' +
+        '<div class="destroy_button"><a onclick="destroy_comment(' + id +
+        ')">&#10060;</a></div>' +
+        '<textarea cols="40" data-comment="' + id +
         '" onkeyup="watch_area(event, this)">' +
-        comment.desc + '</textarea></div>').
+        comment.desc + '</textarea>' + '</div>').
           appendTo('#overlays');
 
       update_overlay(id, viewer.renderer.
