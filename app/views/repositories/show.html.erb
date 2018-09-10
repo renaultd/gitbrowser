@@ -241,7 +241,10 @@
                   "&file=" + $("#filename").val() +
                   "&range=" + JSON.stringify(range) +
                   "&type=" + type})
-              .done(create_new_comment);
+              .done(function(data) {
+                  create_new_comment(data);
+                  $("#overlay_" + data["id"] + " textarea").select();
+              });
       }
   }
 
