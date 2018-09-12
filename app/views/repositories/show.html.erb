@@ -42,11 +42,12 @@
       position:absolute;
       z-index: 100;
       padding: 5px;
-      max-width: 300px;
+      width: 300px;
       border: 1px solid black;
   }
   .viewer_overlay textarea {
       border: none;
+      width: 100%;
   }
   .viewer_overlay_warning {
       background: rgba(255,255,50,0.4);
@@ -339,7 +340,7 @@
         comment.ctype + '">' +
         '<div class="destroy_button"><a onclick="destroy_comment(' + id +
         ')">&#10060;</a></div>' +
-        '<textarea cols="40" data-comment="' + id +
+        '<textarea data-comment="' + id +
         '" onkeyup="watch_area(event, this)">' +
         comment.desc + '</textarea>' + '</div>').
           appendTo('#overlays');
