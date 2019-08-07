@@ -1,32 +1,21 @@
+require 'file_ownerships'
+
 class RepositoriesController < ApplicationController
 
   skip_before_action :verify_authenticity_token
-  before_action :load_repository, except: [:index]
+  before_action :load_repository, except: [:create, :index, :new]
 
-  class FileOwnerships
+  def new
+    @repository = Repository.new
+  end
 
-    def initialize()
-      @owns = {}
+  def create
+    @repository = Repository.new(params.require(:repository).permit(:address, :filter))
+    if @repository.save
+      redirect_to :action => "index"
+    else
+      render :new
     end
-
-    def owns
-      @owns
-    end
-
-    def add(file, is_dir, has_comm)
-      sfile = file.split('/')
-      if not(@owns.key?(file))
-        @owns[file] = { parent: "", is_dir: is_dir,
-                        name: sfile.last, has_comm: has_comm }
-      end
-      sfile.pop()
-      if (sfile.length > 0)
-        parent = sfile.join("/")
-        @owns[file][:parent] = parent
-        self.add(parent, "true", false)
-      end
-    end
-
   end
 
   def index
@@ -48,9 +37,10 @@ class RepositoriesController < ApplicationController
     @revision = params[:revision]
     git_cmd = `git --git-dir #{@repository.address} ls-tree -r --name-only #{@revision}`
     files = git_cmd.lines.collect(&:strip)
-    files = files.select { |f|
-      Regexp.new(@repository.filter).match(f)
-    } if @repository.filter
+    if @repository.filter
+      regexp = Regexp.new(@repository.filter)
+      files = files.select { |f| !(regexp.match(f).nil?) }
+    end
     @comments = Comment.where(repository_id: @repository.id)
                   .collect(&:file).uniq
     @owns = FileOwnerships.new()
