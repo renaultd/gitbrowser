@@ -7,4 +7,7 @@ Rails.application.routes.draw do
   get '/repositories/fetch_file_list' => "repositories#fetch_file_list"
   get '/repositories/save_comment_description' => "repositories#save_comment_description"
   resources :repositories
+
+  # Route for '/'
+  root to: "application#index"
 end
