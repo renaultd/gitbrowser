@@ -1,3 +1,5 @@
+require "file_modes"
+
 class RepositoriesController < ApplicationController
 
   skip_before_action :verify_authenticity_token
@@ -58,7 +60,8 @@ class RepositoriesController < ApplicationController
   def fetch_file
     @revision = params[:revision]
     @file     = params[:file]
-    render plain: @repository.file(@file, @revision)
+    render json: { mode: FileModes.mode_for(@file),
+                   contents: @repository.file(@file, @revision) }
   end
 
   def add_comment

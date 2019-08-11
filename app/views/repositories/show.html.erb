@@ -121,9 +121,10 @@
               '&revision=' + revision +
               "&file=" + filename })
           .done(function(data) {
+              let json = JSON.parse(data);
               $("#filename").val(filename);
-              viewer.setValue(data);
-              viewer.session.setMode("ace/mode/python");
+              viewer.setValue(json["contents"]);
+              viewer.session.setMode(json["mode"]);
               viewer.clearSelection();
               viewer.navigateFileStart();
               clear_markers();
