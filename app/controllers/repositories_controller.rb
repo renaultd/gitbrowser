@@ -16,7 +16,8 @@ class RepositoriesController < ApplicationController
     def add(file, is_dir, has_comm)
       sfile = file.split('/')
       if not(@owns.key?(file))
-        @owns[file] = { parent: "", is_dir: is_dir, name: sfile.last, has_comm: has_comm }
+        @owns[file] = { parent: "", is_dir: is_dir,
+                        name: sfile.last, has_comm: has_comm }
       end
       sfile.pop()
       if (sfile.length > 0)
@@ -33,19 +34,16 @@ class RepositoriesController < ApplicationController
   end
 
   def show
-    git_cmd = `git --git-dir #{@repository.address} rev-list --max-count=10 HEAD`
-    @revisions = [ "HEAD" ] + git_cmd.lines.collect(&:strip)
-    @selected_revision = params[:revision]
+    @revisions = @repository.revisions
+    @selected_revision = params[:revision] ?
+                           params[:revision] : @revisions.first
   end
 
   def fetch_file_list
     @revision = params[:revision]
-    git_cmd = `git --git-dir #{@repository.address} ls-tree -r --name-only #{@revision}`
-    files = git_cmd.lines.collect(&:strip)
-    files = files.select { |f|
-      Regexp.new(@repository.filter).match(f)
-    } if @repository.filter
-    @comments = Comment.where(repository_id: @repository.id).collect(&:file).uniq
+    files = @repository.files(@revision)
+    @comments = Comment.where(repository_id: @repository.id).
+                collect(&:file).uniq
     @owns = FileOwnerships.new()
     files.each{ |f| @owns.add(f, false, @comments.include?(f)) }
     respond_to do |format|
@@ -56,8 +54,7 @@ class RepositoriesController < ApplicationController
   def fetch_file
     @revision = params[:revision]
     @file     = params[:file]
-    git_cmd = `git --git-dir #{@repository.address} show #{@revision}:#{@file}`
-    render plain: git_cmd
+    render plain: @repository.file(@file, @revision)
   end
 
   def add_comment
