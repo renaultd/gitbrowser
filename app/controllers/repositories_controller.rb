@@ -35,8 +35,12 @@ class RepositoriesController < ApplicationController
 
   def show
     @revisions = @repository.revisions
-    @selected_revision = params[:revision] ?
-                           params[:revision] : @revisions.first
+    if params[:revision]
+      possibles = @revisions.select { |r| r.start_with?(params[:revision]) }
+      @selected_revision = possibles.empty? ? "HEAD" : possibles.first
+    else
+      @selected_revision = @revisions.empty? ? "HEAD" : @revisions.first
+    end
   end
 
   def fetch_file_list
