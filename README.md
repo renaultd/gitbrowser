@@ -1,24 +1,11 @@
-# README
+# Git Browser
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+## Installation
 
-Things you may want to cover:
+`bundle update`
 
-* Ruby version
+`rake db:migrate`
 
-* System dependencies
+`rake assets:precompile`
 
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+`./script/rails server`

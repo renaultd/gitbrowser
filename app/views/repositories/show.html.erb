@@ -163,8 +163,9 @@
   }
 
   function init_viewer(data) {
-      viewer.setValue(data);
-      viewer.session.setMode("ace/mode/python");
+      let json = JSON.parse(data);
+      viewer.setValue(json["contents"]);
+      viewer.session.setMode(json["mode"]);
       viewer.clearSelection();
       viewer.navigateFileStart();
       clear_comments();

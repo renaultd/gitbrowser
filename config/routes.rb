@@ -9,5 +9,5 @@ Rails.application.routes.draw do
   resources :repositories
 
   # Route for '/'
-  root to: "application#index"
+  root to: "repositories#index"
 end

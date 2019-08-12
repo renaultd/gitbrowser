@@ -1,4 +1,5 @@
-require 'file_ownerships'
+require "file_ownerships"
+require "file_modes"
 
 class RepositoriesController < ApplicationController
 
@@ -23,26 +24,21 @@ class RepositoriesController < ApplicationController
   end
 
   def show
-    git_cmd = `git --git-dir #{@repository.address} log --pretty="format:%H,%an,%ad" --date=short --max-count=10 HEAD`
-    @revisions = [ { revision: "HEAD", author: "", date: "" } ] +
-                 git_cmd.lines.collect { |l|
-      arr = l.strip.split(",")
-      { revision: arr[0], author: arr[1], date: arr[2] }
-    }
-    @selected_revision = params[:revision]
     @selected_file     = params[:file]
+    @revisions = @repository.revisions
+    if params[:revision]
+      possibles = @revisions.select { |r| r.start_with?(params[:revision]) }
+      @selected_revision = possibles.empty? ? "HEAD" : possibles.first
+    else
+      @selected_revision = @revisions.empty? ? "HEAD" : @revisions.first
+    end
   end
 
   def fetch_file_list
     @revision = params[:revision]
-    git_cmd = `git --git-dir #{@repository.address} ls-tree -r --name-only #{@revision}`
-    files = git_cmd.lines.collect(&:strip)
-    if @repository.filter
-      regexp = Regexp.new(@repository.filter)
-      files = files.select { |f| !(regexp.match(f).nil?) }
-    end
-    @comments = Comment.where(repository_id: @repository.id)
-                  .collect(&:file).uniq
+    files = @repository.files(@revision)
+    @comments = Comment.where(repository_id: @repository.id).
+                collect(&:file).uniq
     @owns = FileOwnerships.new()
     files.each{ |f| @owns.add(f, false, @comments.include?(f)) }
     respond_to do |format|
@@ -53,8 +49,8 @@ class RepositoriesController < ApplicationController
   def fetch_file
     @revision = params[:revision]
     @file     = params[:file]
-    git_cmd = `git --git-dir #{@repository.address} show #{@revision}:#{@file}`
-    render plain: git_cmd
+    render json: { mode: FileModes.mode_for(@file),
+                   contents: @repository.file(@file, @revision) }
   end
 
   def add_comment
