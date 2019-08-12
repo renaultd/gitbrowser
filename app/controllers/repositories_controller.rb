@@ -27,7 +27,8 @@ class RepositoriesController < ApplicationController
     @selected_file     = params[:file]
     @revisions = @repository.revisions
     if params[:revision]
-      possibles = @revisions.select { |r| r.start_with?(params[:revision]) }
+      possibles = @revisions.select { |r|
+        r[:revision].start_with?(params[:revision]) }
       @selected_revision = possibles.empty? ? "HEAD" : possibles.first
     else
       @selected_revision = @revisions.empty? ? "HEAD" : @revisions.first
