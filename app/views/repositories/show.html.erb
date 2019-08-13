@@ -130,8 +130,8 @@
 
     </div>
 
-    Older comments &nbsp;:
-    <div id="older_comments" style="background-color:rgb(200,200,215)">
+    Other comments &nbsp;:
+    <div id="other_comments" style="background-color:rgb(200,200,215)">
 
     </div>
   </div>
@@ -231,7 +231,7 @@
   }
 
   function create_new_comment(comment) {
-      if (comment.revision == $("#revision").val()) {
+      if (comment.sha == $("#revision").val()) {
         const div = "<div>" + comment.description +
               "</div> <a class='goto_line' onclick='viewer.gotoLine(" +
               (comment.range.start.row+1) + ", " +
@@ -255,12 +255,12 @@
         create_overlay(comment.id);
       } else {
         const url = "/repositories/" + $("#repository_id").val() +
-          "?sha=" + comment.revision +
+          "?sha=" + comment.sha +
           "&file=" + comment.file;
         const div = "<div>" + comment.description + "</div>" +
           " (<a class='goto_line' href='" + url + "'>rev. " +
-            comment.revision.substring(0,6) + "</a>) ";
-        $("#older_comments").append($("<div id='comment_" +
+            comment.sha.substring(0,6) + "</a>) ";
+        $("#other_comments").append($("<div id='comment_" +
                               comment.id + "'>").html(div));
         comments[comment.id] = { desc: comment.description };
       }
@@ -309,7 +309,8 @@
               '&comment_id=' + comment_id })
           .done(function () {
               clear_comment(comment_id);
-              if ($("#current_comments a").length + $("#older_comments a").length == 0)
+              if ($("#current_comments a").length +
+                    $("#other_comments a").length == 0)
                   $("a[data-file='" + $("#filename").val() + "']").
                      removeClass("comment_line");
           });

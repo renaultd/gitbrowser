@@ -75,8 +75,8 @@ class RepositoriesController < ApplicationController
     file  = params[:file]
     type  = params[:type]
     c = Comment.new(repository_id: @repository.id,
-                    file: file,
-                    revision: sha,
+                    file:  file,
+                    sha:   sha,
                     range: range,
                     ctype: type)
     c.save
