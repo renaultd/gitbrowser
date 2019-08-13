@@ -82,7 +82,7 @@
       <input type="hidden" id="repository_id"
              value="<%= @repository.id %>"/>
       <input type="hidden" id="revision"
-             value="<%= @selected_revision[:revision] %>"/>
+             value="<%= @selected_revision[:sha] %>"/>
       <input type="hidden" id="filename"
              value="<%= @selected_file %>"/>
     </div>
@@ -90,12 +90,12 @@
     <div>
       <select id="revision_selector" onChange="fetch_file_list()">
         <% @revisions.each_with_index do |r| %>
-        <option value="<%= r[:revision] %>"
-                <% if r[:revision] == @selected_revision[:revision] %>
+        <option value="<%= r[:sha] %>"
+                <% if r[:sha] == @selected_revision[:sha] %>
                 selected="selected"
                 <% end %>
                 >
-          <%= r[:revision][0..6] %> - <%= r[:date] %> - <%= r[:author] %>
+          <%= r[:sha][0..6] %> - <%= r[:date] %> - <%= r[:author] %>
         </option>
         <% end %>
       </select>
@@ -394,7 +394,7 @@
   <% end %>
   <% if @selected_file %>
     load_file("<%= @selected_file %>",
-              "<%= @selected_revision[:revision] %>");
+              "<%= @selected_revision[:sha] %>");
   <% end %>
 
   $("#warning_button").click(save_new_comment("warning"));

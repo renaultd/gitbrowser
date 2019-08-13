@@ -28,11 +28,11 @@ class RepositoriesController < ApplicationController
     @revisions = @repository.revisions
     if params[:revision] and params[:revision] != "null"
       possibles = @revisions.select { |r|
-        r[:revision].start_with?(params[:revision]) }
-      @selected_revision = possibles.empty? ? { revision: "HEAD" } :
+        r[:sha].start_with?(params[:revision]) }
+      @selected_revision = possibles.empty? ? { sha: "HEAD" } :
                              possibles.first
     else
-      @selected_revision = @revisions.empty? ? { revision: "HEAD" } :
+      @selected_revision = @revisions.empty? ? { sha: "HEAD" } :
                              @revisions.first
     end
   end
