@@ -151,25 +151,27 @@
   viewer.renderer.setAnimatedScroll(true);
 
   function fetch_file_list() {
-      const revision = $('#revision_selector').val();
+      const sha = $('#revision_selector').val();
       $.ajax({
           dataType: 'json',
           url: '/repositories/fetch_file_list' +
               '?id=' + $("#repository_id").val() +
-              '&revision=' + revision })
+              '&sha=' + sha })
           .done(function(data) {
-              $("#revision").val(revision);
+              $("#revision").val(sha);
               load_files(data);
           });
   }
 
   function clear_comment(id) {
       const comment = comments[id];
-      viewer.getSession().removeMarker(comment.marker_id);
-      comment.anchor.detach();
+      if (comment.marker_id) {
+          viewer.getSession().removeMarker(comment.marker_id);
+          comment.anchor.detach();
+          $("#overlay_" + id).remove();
+          viewer.session.removeListener("changeScrollTop", comment.callb);
+      }
       $("#comment_" + id).remove();
-      $("#overlay_" + id).remove();
-      viewer.session.removeListener("changeScrollTop", comment.callb);
       delete comments[id];
   }
 
@@ -186,17 +188,17 @@
       clear_comments();
   }
 
-  function load_file(filename, revision) {
+  function load_file(filename, sha) {
       $.ajax({
           dataType: 'text',
           url : '/repositories/fetch_file' +
               '?id=' + $("#repository_id").val() +
-              '&revision=' + revision +
+              '&sha=' + sha +
               "&file=" + filename })
           .done(function(data) {
               $("#filename").val(filename);
               init_viewer(data);
-              load_comments(filename, revision);
+              load_comments(filename, sha);
           });
   }
 
@@ -253,13 +255,14 @@
         create_overlay(comment.id);
       } else {
         const url = "/repositories/" + $("#repository_id").val() +
-          "?revision=" + comment.revision +
+          "?sha=" + comment.revision +
           "&file=" + comment.file;
         const div = "<div>" + comment.description + "</div>" +
           " (<a class='goto_line' href='" + url + "'>rev. " +
             comment.revision.substring(0,6) + "</a>) ";
         $("#older_comments").append($("<div id='comment_" +
                               comment.id + "'>").html(div));
+        comments[comment.id] = { desc: comment.description };
       }
       $("a[data-file='" + comment.file + "']").addClass("comment_line");
   }
@@ -271,7 +274,7 @@
               dataType: 'json',
               url: '/repositories/add_comment' +
                   '?id=' + $("#repository_id").val() +
-                  '&revision=' + $("#revision").val() +
+                  '&sha=' + $("#revision").val() +
                   "&file=" + $("#filename").val() +
                   "&range=" + JSON.stringify(range) +
                   "&type=" + type})
@@ -306,19 +309,18 @@
               '&comment_id=' + comment_id })
           .done(function () {
               clear_comment(comment_id);
-              if ($("#current_comments a").length == 0)
+              if ($("#current_comments a").length + $("#older_comments a").length == 0)
                   $("a[data-file='" + $("#filename").val() + "']").
                      removeClass("comment_line");
           });
   }
 
-  function load_comments(filename, revision) {
+  function load_comments(filename, sha) {
       $.ajax({
           dataType: 'json',
           url: '/repositories/fetch_comments' +
               '?id=' + $("#repository_id").val() +
-              '&revision=' + revision +
-              "&file=" + filename })
+              '&file=' + filename })
           .done(function(data) {
               $("#current_comments").empty();
               data.forEach(create_new_comment);

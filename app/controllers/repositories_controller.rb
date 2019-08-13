@@ -26,9 +26,9 @@ class RepositoriesController < ApplicationController
   def show
     @selected_file = params[:file]
     @revisions = @repository.revisions
-    if params[:revision] and params[:revision] != "null"
+    if params[:sha] and params[:sha] != "null"
       possibles = @revisions.select { |r|
-        r[:sha].start_with?(params[:revision]) }
+        r[:sha].start_with?(params[:sha]) }
       @selected_revision = possibles.empty? ? { sha: "HEAD" } :
                              possibles.first
     else
@@ -51,8 +51,8 @@ class RepositoriesController < ApplicationController
   end
 
   def fetch_file_list
-    @revision = params[:revision]
-    files = @repository.files(@revision)
+    sha   = params[:sha]
+    files = @repository.files(sha)
     @comments = Comment.where(repository_id: @repository.id).
                 collect(&:file).uniq
     @owns = FileOwnerships.new()
@@ -63,22 +63,22 @@ class RepositoriesController < ApplicationController
   end
 
   def fetch_file
-    @revision = params[:revision]
-    @file     = params[:file]
-    render json: { mode: FileModes.mode_for(@file),
-                   contents: @repository.file(@file, @revision) }
+    sha  = params[:sha]
+    file = params[:file]
+    render json: { mode: FileModes.mode_for(file),
+                   contents: @repository.file(file, sha) }
   end
 
   def add_comment
-    @range    = JSON.parse(params[:range])
-    @revision = params[:revision]
-    @file     = params[:file]
-    @type     = params[:type]
+    range = JSON.parse(params[:range])
+    sha   = params[:sha]
+    file  = params[:file]
+    type  = params[:type]
     c = Comment.new(repository_id: @repository.id,
-                    file: @file,
-                    revision: @revision,
-                    range: @range,
-                    ctype: @type)
+                    file: file,
+                    revision: sha,
+                    range: range,
+                    ctype: type)
     c.save
     render :json => c.to_json
   end
@@ -95,10 +95,9 @@ class RepositoriesController < ApplicationController
   end
 
   def fetch_comments
-    @revision = params[:revision]
-    @file     = params[:file]
+    file = params[:file]
     @comments = Comment.where(repository_id: @repository.id,
-                              file: @file)
+                              file: file)
     respond_to do |format|
       format.js { render :json => @comments }
     end
