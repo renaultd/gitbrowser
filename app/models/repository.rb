@@ -22,7 +22,8 @@ class Repository < ApplicationRecord
     files = `#{git_cmd}`.lines.collect(&:strip)
     regexp = Regexp.new(self.filter.
                          gsub(".", "\\.").
-                         gsub("*", ".*"))
+                         gsub("*", ".*").
+                         gsub(",", "|"))
     return files.select { |f| regexp.match(f) }
   end
 
