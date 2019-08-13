@@ -98,8 +98,7 @@ class RepositoriesController < ApplicationController
     @revision = params[:revision]
     @file     = params[:file]
     @comments = Comment.where(repository_id: @repository.id,
-                              file: @file,
-                              revision: @revision)
+                              file: @file)
     respond_to do |format|
       format.js { render :json => @comments }
     end

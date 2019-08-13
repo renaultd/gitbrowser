@@ -8,7 +8,7 @@ class Repository < ApplicationRecord
 
   def revisions
     git_cmd = "git --git-dir #{self.git_dir} log " +
-              "--pretty='format:%H,%an,%ad' --date=short --max-count=10 HEAD"
+              "--pretty='format:%H,%an,%ad' --date=short --max-count=100 HEAD"
     revs = `#{git_cmd}`.lines.collect { |l|
       arr = l.strip.split(",")
       { revision: arr[0], author: arr[1], date: arr[2] }

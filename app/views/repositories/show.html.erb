@@ -90,7 +90,7 @@
     <div>
       <select id="revision_selector" onChange="fetch_file_list()">
         <% @revisions.each_with_index do |r| %>
-        <option value="<%= r[:revision][0..6] %>"
+        <option value="<%= r[:revision] %>"
                 <% if r[:revision] == @selected_revision[:revision] %>
                 selected="selected"
                 <% end %>
@@ -125,7 +125,13 @@
     <button id="error_button">Highlight error</button>
     <button id="toggle_comments">Toggle comments</button>
 
-    <div id="comments">
+    Current comments&nbsp;:
+    <div id="current_comments" style="background-color:rgb(200,200,255)">
+
+    </div>
+
+    Older comments &nbsp;:
+    <div id="older_comments" style="background-color:rgb(200,200,215)">
 
     </div>
   </div>
@@ -223,28 +229,39 @@
   }
 
   function create_new_comment(comment) {
-      const Range = require("ace/range").Range;
-      const range = new Range(comment.range.start.row,
-                              comment.range.start.column,
-                              comment.range.end.row,
-                              comment.range.end.column);
-      const marker = viewer.session.addMarker(range,
-                                              "viewer_sel_" + comment.ctype,
-                                              "line");
-      const div = "<div>" + comment.description +
-            "</div> <a class='goto_line' onclick='viewer.gotoLine(" +
-            (comment.range.start.row+1) + ", " +
-            comment.range.start.column +
-            ", false)'>(l. " + comment.range.start.row +
+      if (comment.revision == $("#revision").val()) {
+        const div = "<div>" + comment.description +
+              "</div> <a class='goto_line' onclick='viewer.gotoLine(" +
+              (comment.range.start.row+1) + ", " +
+              comment.range.start.column +
+              ", false)'>(l. " + comment.range.start.row +
             "-" + comment.range.end.row + ")</a>";
-      $("#comments").append($("<div id='comment_" +
+        $("#current_comments").append($("<div id='comment_" +
                               comment.id + "'>").html(div));
-      comments[comment.id] = { marker_id: marker,
-                               range: range,
-                               ctype: comment.ctype,
-                               desc: comment.description };
+        const Range = require("ace/range").Range;
+        const range = new Range(comment.range.start.row,
+                                comment.range.start.column,
+                                comment.range.end.row,
+                                comment.range.end.column);
+        const marker = viewer.session.addMarker(range,
+                                                "viewer_sel_" + comment.ctype,
+                                                "line");
+        comments[comment.id] = { marker_id: marker,
+                                 range: range,
+                                 ctype: comment.ctype,
+                                 desc: comment.description };
+        create_overlay(comment.id);
+      } else {
+        const url = "/repositories/" + $("#repository_id").val() +
+          "?revision=" + comment.revision +
+          "&file=" + comment.file;
+        const div = "<div>" + comment.description + "</div>" +
+          " (<a class='goto_line' href='" + url + "'>rev. " +
+            comment.revision.substring(0,6) + "</a>) ";
+        $("#older_comments").append($("<div id='comment_" +
+                              comment.id + "'>").html(div));
+      }
       $("a[data-file='" + comment.file + "']").addClass("comment_line");
-      create_overlay(comment.id);
   }
 
   function save_new_comment(type) {
@@ -289,7 +306,7 @@
               '&comment_id=' + comment_id })
           .done(function () {
               clear_comment(comment_id);
-              if ($("#comments a").length == 0)
+              if ($("#current_comments a").length == 0)
                   $("a[data-file='" + $("#filename").val() + "']").
                      removeClass("comment_line");
           });
@@ -303,7 +320,7 @@
               '&revision=' + revision +
               "&file=" + filename })
           .done(function(data) {
-              $("#comments").empty();
+              $("#current_comments").empty();
               data.forEach(create_new_comment);
           });
   }
@@ -376,7 +393,8 @@
     fetch_file_list();
   <% end %>
   <% if @selected_file %>
-    load_file("<%= @selected_file %>", "<%= @selected_revision %>");
+    load_file("<%= @selected_file %>",
+              "<%= @selected_revision[:revision] %>");
   <% end %>
 
   $("#warning_button").click(save_new_comment("warning"));
