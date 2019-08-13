@@ -1,0 +1,16 @@
+
+<h3>Repository / Edit</h3>
+<div class="form">
+  <%= form_with(model: @repository) do |form| %>
+    <%= form.label :address %>
+    <%= form.text_field :address, autofocus: true %>
+    <br/>
+    <br/>
+    <%= form.label :filter %>
+    <%= form.text_field :filter %>
+    <br/>
+    <br/>
+    <%= form.submit 'Submit', class: 'submit' %>
+  <% end %>
+</div>
+<%= link_to "Show", @repository %>
