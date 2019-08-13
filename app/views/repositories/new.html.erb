@@ -1,5 +1,5 @@
 
-<h3>Repository</h3>
+<h3>Repository / New</h3>
 <div class="form">
   <%= form_with(model: @repository) do |form| %>
     <%= form.label :address %>
@@ -13,3 +13,5 @@
     <%= form.submit 'Submit', class: 'submit' %>
   <% end %>
 </div>
+
+<%= link_to "Repositories", repositories_path %>

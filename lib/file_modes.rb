@@ -1,10 +1,11 @@
 module FileModes
 
   MODES = {
-    "c"   => "ace/mode/c_cpp",
-    "py"  => "ace/mode/python",
-    "rb"  => "ace/mode/ruby",
-    "rkt" => "ace/mode/scheme",
+    "c"    => "ace/mode/c_cpp",
+    "html" => "ace/mode/html",
+    "py"   => "ace/mode/python",
+    "rb"   => "ace/mode/ruby",
+    "rkt"  => "ace/mode/scheme",
   }
 
   DEFAULT_MODE = "ace/mode/text"

@@ -76,17 +76,26 @@
   <div style="display: flex;
               flex-direction: column;">
     <div>
-      <a href="/repositories/">Repository&nbsp;:</a> <%= @repository.address %>
-      <input type="hidden" id="repository_id" value="<%= @repository.id %>"/>
-      <input type="hidden" id="revision" value=""/>
-      <input type="hidden" id="filename" value=""/>
+      <a href="<%= repositories_path %>">Repository&nbsp;:</a>
+      <%= @repository.address %>
+      (<a href="<%= edit_repository_path(@repository) %>">edit</a>)
+      <input type="hidden" id="repository_id"
+             value="<%= @repository.id %>"/>
+      <input type="hidden" id="revision"
+             value="<%= @selected_revision[:revision] %>"/>
+      <input type="hidden" id="filename"
+             value="<%= @selected_file %>"/>
     </div>
 
     <div>
       <select id="revision_selector" onChange="fetch_file_list()">
-        <% @revisions.each do |r| %>
-        <option value="<%= r[:revision] %>">
-          <%= r[:date] %> - <%= r[:author] %>
+        <% @revisions.each_with_index do |r| %>
+        <option value="<%= r[:revision][0..6] %>"
+                <% if r[:revision] == @selected_revision[:revision] %>
+                selected="selected"
+                <% end %>
+                >
+          <%= r[:revision][0..6] %> - <%= r[:date] %> - <%= r[:author] %>
         </option>
         <% end %>
       </select>
@@ -364,7 +373,6 @@
   }
 
   <% if @selected_revision %>
-    $("#revision_selector").val("<%= @selected_revision %>");
     fetch_file_list();
   <% end %>
   <% if @selected_file %>

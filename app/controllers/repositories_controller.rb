@@ -11,7 +11,7 @@ class RepositoriesController < ApplicationController
   end
 
   def create
-    @repository = Repository.new(params.require(:repository).permit(:address, :filter))
+    @repository = Repository.new(repository_params)
     if @repository.save
       redirect_to :action => "index"
     else
@@ -24,14 +24,29 @@ class RepositoriesController < ApplicationController
   end
 
   def show
-    @selected_file     = params[:file]
+    @selected_file = params[:file]
     @revisions = @repository.revisions
-    if params[:revision]
+    if params[:revision] and params[:revision] != "null"
       possibles = @revisions.select { |r|
         r[:revision].start_with?(params[:revision]) }
-      @selected_revision = possibles.empty? ? "HEAD" : possibles.first
+      @selected_revision = possibles.empty? ? { revision: "HEAD" } :
+                             possibles.first
     else
-      @selected_revision = @revisions.empty? ? "HEAD" : @revisions.first
+      @selected_revision = @revisions.empty? ? { revision: "HEAD" } :
+                             @revisions.first
+    end
+  end
+
+  def edit
+
+  end
+
+  def update
+    if @repository.update_attributes(repository_params)
+      flash[:success] = "Repository updated"
+      redirect_to @repository, format: :html
+    else
+      render 'edit'
     end
   end
 
@@ -92,6 +107,13 @@ class RepositoriesController < ApplicationController
 
   def load_repository
     @repository = Repository.find(params[:id])
+  end
+
+  private
+
+  def repository_params
+    params.require(:repository).
+      permit(:address, :filter)
   end
 
 end

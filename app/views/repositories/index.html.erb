@@ -10,9 +10,8 @@
       <ul>
         <% @repositories.all.each do |r| %>
         <li>
-          <a href="/repositories/<%=r.id %>?revision=HEAD">
-            <%= r.address %> (filter : <%= r.filter %>)
-          </a>
+          <%= link_to r.address, repository_path(r) %>
+          (filter : <%= r.filter %>)
         </li>
         <% end %>
         <li> <%= link_to("Create new repository", new_repository_path) %>
