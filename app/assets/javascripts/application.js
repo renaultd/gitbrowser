@@ -82,7 +82,7 @@ function load_files(data) {
                     .append($('<ul data-file="' + el + '">'));
                 fill_level(el);
             } else {
-                const tel = data[el].has_comm ? "<a data-file='" + el + "' class='comment_line'>" +
+                const tel = data[el].has_comm ? "<a data-file='" + el + "' class='commented_file'>" +
                       txtel + "</a>" : "<a data-file='" + el + "'>" + txtel + "</a>";
                 domel.append($('<li>').html(tel));
             }
@@ -131,7 +131,7 @@ function create_new_comment(comment) {
                             comment.id + "'>").html(div));
       comments[comment.id] = { desc: comment.description };
     }
-    $("a[data-file='" + comment.file + "']").addClass("comment_line");
+    $("a[data-file='" + comment.file + "']").addClass("commented_file");
 }
 
 // Save a comment on the server, then display it in the UI.
@@ -182,7 +182,7 @@ function destroy_comment(comment_id) {
             if ($("#current_comments a").length +
                   $("#other_comments a").length == 0)
                 $("a[data-file='" + $("#filename").val() + "']").
-                   removeClass("comment_line");
+                   removeClass("commented_file");
         });
 }
 
