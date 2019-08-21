@@ -16,6 +16,8 @@ function fetch_file_list() {
         .done(function(data) {
             $("#revision").val(sha);
             load_files(data);
+            const file = $("#filename").val();
+            if (file) { load_file(file, sha); }
         });
 }
 
