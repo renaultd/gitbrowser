@@ -4,7 +4,8 @@
 //= require jquery-ui
 //= require_tree .
 
-////////////////////////////////////////////////////////////////
+// Hook called when selecting a revision, calling the server for a
+// list of file and filling the page with it.
 function fetch_file_list() {
     const sha = $('#revision_selector').val();
     $.ajax({
@@ -18,6 +19,8 @@ function fetch_file_list() {
         });
 }
 
+// Remove a comment from the UI -- does *not* remove the comment from
+// the server.
 function clear_comment(id) {
     const comment = comments[id];
     if (comment.marker_id) {
@@ -34,6 +37,7 @@ function clear_comments() {
     Object.keys(comments).forEach(clear_comment);
 }
 
+// Load the ACE viewer with `data` as its contents.
 function init_viewer(data) {
     let json = JSON.parse(data);
     viewer.setValue(json["contents"]);
@@ -43,6 +47,8 @@ function init_viewer(data) {
     clear_comments();
 }
 
+// Fetch a file's contents on the server with the possible comments,
+// and display them in the UI.
 function load_file(filename, sha) {
     $.ajax({
         dataType: 'text',
@@ -57,6 +63,8 @@ function load_file(filename, sha) {
         });
 }
 
+// Given a list of files retrieved with `fetch_file_list`, populate a
+// tree of the files in the UI.
 function load_files(data) {
     $("#file_tree").empty();
     const revision = $("#revision_selector").val();
@@ -85,6 +93,8 @@ function load_files(data) {
                                       $("#revision").val()));
 }
 
+// Create a new comment inside the UI -- does *not* create the comment
+// on the server.
 function create_new_comment(comment) {
     if (comment.sha == $("#revision").val()) {
       const div = "<div>" + comment.description +
@@ -122,6 +132,7 @@ function create_new_comment(comment) {
     $("a[data-file='" + comment.file + "']").addClass("comment_line");
 }
 
+// Save a comment on the server, then display it in the UI.
 function save_new_comment(type) {
     return function () {
         const range = viewer.getSelectionRange();
@@ -140,6 +151,7 @@ function save_new_comment(type) {
     }
 }
 
+// Update a comment's description on the server and on the UI.
 function save_comment_description(comment_id, text) {
     $.ajax({
             dataType: 'json',
@@ -156,6 +168,7 @@ function save_comment_description(comment_id, text) {
         });
 }
 
+// Destroy a comment on the server and on the UI.
 function destroy_comment(comment_id) {
     $.ajax({
         dataType: 'json',
@@ -171,6 +184,8 @@ function destroy_comment(comment_id) {
         });
 }
 
+// Load the comments for a given file from the server and display them
+// on the UI (typically with `create_new_comment`)
 function load_comments(filename, sha) {
     $.ajax({
         dataType: 'json',
@@ -183,6 +198,8 @@ function load_comments(filename, sha) {
         });
 }
 
+// Callback used to move a comment's "overlay" when the code is
+// scrolled up or down.
 function update_overlay(id, position){
     var div = $("#overlay_" + id)[0];
     div.style.left = (position.pageX + 800) + 'px'; // 800 is the offset
@@ -194,6 +211,7 @@ function update_overlay(id, position){
     }
 }
 
+// Callback used to watch the keypresses inside a comment's "overlay".
 function watch_area(event, elem) {
     if (event.keyCode == 13) { // Enter keypress
         elem.value = elem.value.replace(/\r?\n|\r/g, "");
@@ -201,6 +219,8 @@ function watch_area(event, elem) {
     }
 }
 
+// Function that creates the overlay for a comment, meaning the small
+// text area that scrolls with the highlighted comment.
 function create_overlay(id) {
     const comment = comments[id];
     var session = viewer.getSession();
@@ -227,6 +247,7 @@ function create_overlay(id) {
     comment.callb = callb;
 }
 
+// Toggle the visibility of the overlays.
 function toggle_comments() {
     if ($("#overlays").css("display") == "block")
         $("#overlays").css("display", "none");
