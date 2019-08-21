@@ -328,19 +328,6 @@
           });
   }
 
-  // function update_tooltip(position, text){
-  //       var div = $('#tooltip')[0];
-  //       div.style.left = position.pageX + 'px';
-  //       div.style.top = position.pageY + 'px';
-  //       if (text) {
-  //               div.style.display = "block";
-  //               div.innerText = text;
-  //       } else {
-  //               div.style.display = "none";
-  //               div.innerText = "";
-  //       }
-  // }
-
   function update_overlay(id, position){
       var div = $("#overlay_" + id)[0];
       div.style.left = (position.pageX + 800) + 'px'; // 800 is the offset
@@ -403,21 +390,5 @@
   $("#warning_button").click(save_new_comment("warning"));
   $("#error_button").click(save_new_comment("error"));
   $("#toggle_comments").click(toggle_comments);
-
-  // viewer.on("mousemove", function (e){
-  //     var pos = e.getDocumentPosition();
-  //     if (pos) {
-  //         const up = Object.keys(comments).some((m) => {
-  //             const mark = comments[m];
-  //             if (mark.range.contains(pos.row, pos.column)) {
-  //                 const pixelpos = viewer.renderer.textToScreenCoordinates(pos);
-  //                 pixelpos.pageY += viewer.renderer.lineHeight;
-  //                 update_tooltip(pixelpos, mark.desc);
-  //                 return true;
-  //             } else return false;
-  //         });
-  //         if (!up) update_tooltip(pos);
-  //     }
-  // });
 
 </script>
