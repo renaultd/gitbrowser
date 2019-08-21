@@ -103,8 +103,8 @@ function create_new_comment(comment) {
             "</div> <a class='goto_line' onclick='viewer.gotoLine(" +
             (comment.range.start.row+1) + ", " +
             comment.range.start.column +
-            ", false)'>(l. " + comment.range.start.row +
-          "-" + comment.range.end.row + ")</a>";
+            ", false)'>(l. " + (comment.range.start.row+1) +
+            "-" + (comment.range.end.row+1) + ")</a>";
       $("#current_comments").append($("<div id='comment_" +
                             comment.id + "'>").html(div));
       const Range = require("ace/range").Range;
