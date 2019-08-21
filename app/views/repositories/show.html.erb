@@ -52,6 +52,7 @@
     <button id="error_button">Highlight error</button>
     <button id="toggle_comments">Toggle comments</button>
 
+    <p/>
     Current comments&nbsp;:
     <div id="current_comments" style="background-color:rgb(200,200,255)">
 
@@ -78,7 +79,7 @@
   viewer.renderer.setAnimatedScroll(true);
 
   <% if @selected_revision %>
-    fetch_file_list();
+    fetch_file_list("<%= @selected_revision[:sha] %>");
   <% end %>
   <% if @selected_file %>
     load_file("<%= @selected_file %>",

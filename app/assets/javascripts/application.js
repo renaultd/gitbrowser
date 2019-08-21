@@ -4,20 +4,27 @@
 //= require jquery-ui
 //= require_tree .
 
-// Hook called when selecting a revision, calling the server for a
-// list of file and filling the page with it.
-function fetch_file_list() {
-    const sha = $('#revision_selector').val();
+// Hook called when selecting the revision `sha`, calling the server
+// for a list of file and filling the page with it. If `sha` is not
+// provided, it is searched into $('#revision_selector').val()
+function fetch_file_list(sha) {
+    var real_sha;
+    if (sha) {
+        real_sha = sha;
+        $('#revision_selector').val(sha);
+    } else {
+        real_sha = $('#revision_selector').val();
+    }
     $.ajax({
         dataType: 'json',
         url: '/repositories/fetch_file_list' +
             '?id=' + $("#repository_id").val() +
-            '&sha=' + sha })
+            '&sha=' + real_sha })
         .done(function(data) {
-            $("#revision").val(sha);
+            $("#revision").val(real_sha);
             load_files(data);
             const file = $("#filename").val();
-            if (file) { load_file(file, sha); }
+            if (file) { load_file(file, real_sha); }
         });
 }
 
@@ -52,6 +59,7 @@ function init_viewer(data) {
 // Fetch a file's contents on the server with the possible comments,
 // and display them in the UI.
 function load_file(filename, sha) {
+    console.log("load_file");
     $.ajax({
         dataType: 'text',
         url : '/repositories/fetch_file' +
@@ -65,6 +73,12 @@ function load_file(filename, sha) {
         });
 }
 
+function load_file_and_revisions(filename, sha) {
+    console.log("load_file_and_revisions");
+    $("#filename").val(filename);
+    fetch_file_list(sha); // also loads the file
+}
+
 // Given a list of files retrieved with `fetch_file_list`, populate a
 // tree of the files in the UI.
 function load_files(data) {
@@ -76,14 +90,17 @@ function load_files(data) {
         const els = keys.filter((el) => data[el].parent == level);
         els.forEach(function (el) {
             const txtel = data[el].name;
-            const domel = (level == "") ? $("#file_tree") : $("ul[data-file='" + level + "']");
+            const domel = (level == "") ? $("#file_tree") :
+                  $("ul[data-file='" + level + "']");
             if(data[el].is_dir) {
                 domel.append($('<li>').text(txtel))
                     .append($('<ul data-file="' + el + '">'));
                 fill_level(el);
             } else {
-                const tel = data[el].has_comm ? "<a data-file='" + el + "' class='commented_file'>" +
-                      txtel + "</a>" : "<a data-file='" + el + "'>" + txtel + "</a>";
+                const tel = data[el].has_comm ? "<a data-file='" + el +
+                      "' class='commented_file'>" +
+                      txtel + "</a>" : "<a data-file='" + el + "'>" +
+                      txtel + "</a>";
                 domel.append($('<li>').html(tel));
             }
         });
@@ -98,38 +115,40 @@ function load_files(data) {
 // Create a new comment inside the UI -- does *not* create the comment
 // on the server.
 function create_new_comment(comment) {
+    console.log("Comment : " + comment.id);
     if (comment.sha == $("#revision").val()) {
-      const div = "<div>" + comment.description +
-            "</div> <a class='goto_line' onclick='viewer.gotoLine(" +
-            (comment.range.start.row+1) + ", " +
-            comment.range.start.column +
-            ", false)'>(l. " + (comment.range.start.row+1) +
-            "-" + (comment.range.end.row+1) + ")</a>";
-      $("#current_comments").append($("<div id='comment_" +
-                            comment.id + "'>").html(div));
-      const Range = require("ace/range").Range;
-      const range = new Range(comment.range.start.row,
-                              comment.range.start.column,
-                              comment.range.end.row,
-                              comment.range.end.column);
-      const marker = viewer.session.addMarker(range,
-                                              "viewer_sel_" + comment.ctype,
-                                              "line");
-      comments[comment.id] = { marker_id: marker,
-                               range: range,
-                               ctype: comment.ctype,
-                               desc: comment.description };
-      create_overlay(comment.id);
+        console.log("Current");
+        const div = "<div>" + comment.description +
+              "</div> <a class='goto_line' onclick='viewer.gotoLine(" +
+              (comment.range.start.row+1) + ", " +
+              comment.range.start.column +
+              ", false)'>(l. " + (comment.range.start.row+1) +
+              "-" + (comment.range.end.row+1) + ")</a>";
+        $("#current_comments").append($("<div id='comment_" +
+                                        comment.id + "'>").html(div));
+        const Range = require("ace/range").Range;
+        const range = new Range(comment.range.start.row,
+                                comment.range.start.column,
+                                comment.range.end.row,
+                                comment.range.end.column);
+        const marker = viewer.session.addMarker(range,
+                                                "viewer_sel_" + comment.ctype,
+                                                "line");
+        comments[comment.id] = { marker_id: marker,
+                                 range: range,
+                                 ctype: comment.ctype,
+                                 desc: comment.description };
+        create_overlay(comment.id);
     } else {
-      const url = "/repositories/" + $("#repository_id").val() +
-        "?sha=" + comment.sha +
-        "&file=" + comment.file;
-      const div = "<div>" + comment.description + "</div>" +
-        " (<a class='goto_line' href='" + url + "'>rev. " +
-          comment.sha.substring(0,6) + "</a>) ";
-      $("#other_comments").append($("<div id='comment_" +
-                            comment.id + "'>").html(div));
-      comments[comment.id] = { desc: comment.description };
+        console.log("Other");
+        const handler = "load_file_and_revisions(\"" +
+              comment.file + "\",\"" + comment.sha + "\");"
+        const div = "<div>" + comment.description + "</div>" +
+              " (<a class='goto_line' onClick='" + handler + "'>rev. " +
+              comment.sha.substring(0,6) + "</a>) ";
+        $("#other_comments").append($("<div id='comment_" +
+                                      comment.id + "'>").html(div));
+        comments[comment.id] = { desc: comment.description };
     }
     $("a[data-file='" + comment.file + "']").addClass("commented_file");
 }
