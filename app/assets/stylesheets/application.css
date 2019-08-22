@@ -59,12 +59,15 @@ a.goto_line {
 div#global {
     display:flex;
 }
-div#viewer {
+div#viewer, div#side_viewer {
     height: 900px;
     width: 900px;
     flex: 2.5 1 0;
 }
-div#comments, div#revisions {
+div#side_viewer, div#side_comments {
+    visibility: collapse;
+}
+div#comments, div#revisions, div#side_comments {
     flex: 1 1 0;
 }
 div.current_comments {

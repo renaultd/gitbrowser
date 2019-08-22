@@ -4,6 +4,11 @@
 //= require jquery-ui
 //= require_tree .
 
+// Returns the first revision on the revision_selector
+function get_first_revision() {
+    return $("#revision_selector option:first").val();
+}
+
 // Hook called when selecting the revision `sha`, calling the server
 // for a list of file and filling the page with it. If `sha` is not
 // provided, it is searched into $('#revision_selector').val().
@@ -25,7 +30,7 @@ function fetch_file_list(viewer, sha) {
             $("#revision").val(real_sha);
             load_files(data, viewer);
             const file = $("#filename").val();
-            if (file) { load_file(file, real_sha, viewer); }
+            if (file) { load_file(file, real_sha, viewer, true); }
         });
 }
 
@@ -49,17 +54,23 @@ function clear_comments(viewer) {
 
 // Load an Ace viewer with `data` as its contents.
 function init_viewer(viewer, data) {
-    let json = JSON.parse(data);
+    viewer.$blockScrolling = Infinity; // fix logs
+    viewer.setOptions({
+        highlightActiveLine: false,
+        fontSize: "13pt",
+        theme: 'ace/theme/chrome',
+    });
+    viewer.renderer.setAnimatedScroll(true);
+    const json = JSON.parse(data);
     viewer.setValue(json["contents"]);
     viewer.session.setMode(json["mode"]);
     viewer.clearSelection();
     viewer.navigateFileStart();
-    clear_comments(viewer);
 }
 
 // Fetch a file's contents on the server with the possible comments,
 // and display them in the viewer.
-function load_file(filename, sha, viewer) {
+function load_file(filename, sha, viewer, comments) {
     $.ajax({
         dataType: 'text',
         url : '/repositories/fetch_file' +
@@ -69,7 +80,10 @@ function load_file(filename, sha, viewer) {
         .done(function(data) {
             $("#filename").val(filename);
             init_viewer(viewer, data);
-            load_comments(filename, sha, viewer);
+            if (comments) {
+                clear_comments(viewer);
+                load_comments(filename, sha, viewer);
+            }
         });
 }
 
@@ -79,7 +93,7 @@ function load_file_and_revisions(filename, sha, viewer) {
 }
 
 function load_head_revision(viewer) {
-    fetch_file_list(viewer, $("#revision_selector option:first").val());
+    fetch_file_list(viewer, get_first_revision());
 }
 
 // Given a list of files retrieved with `fetch_file_list`, populate a
@@ -112,7 +126,31 @@ function load_files(data, viewer) {
     fill_level("");
     $("#file_tree a").click((event) =>
                             load_file($(event.target).data("file"),
-                                      $("#revision").val(), viewer));
+                                      $("#revision").val(),
+                                      viewer, true));
+}
+
+// Displays the second viewer to have a diff between the two files
+function open_diff_view(filename, sha) {
+    $("#revisions").css("visibility", "collapse");
+    $("#overlays").css("visibility", "collapse");
+    $("#comments").css("visibility", "collapse");
+    $("#side_viewer").css("visibility", "visible");
+    $("#side_comments").css("visibility", "visible");
+    const side_viewer = ace.edit("side_viewer");
+    load_file(filename, sha, side_viewer, false);
+    // TODO : Clear possibly existing comments
+    Object.keys(comments).forEach((c) =>
+         $("#side_comments").append("<div>" + comments[c].desc + "</div>"));
+}
+
+function close_diff_view() {
+    $("#revisions").css("visibility", "visible");
+    $("#overlays").css("visibility", "visible");
+    $("#comments").css("visibility", "visible");
+    $("#side_viewer").css("visibility", "collapse");
+    $("#side_comments").css("visibility", "collapse");
+    ace.edit("side_viewer").destroy();
 }
 
 // Create a new comment connected to a viewer -- does *not* create the
@@ -147,8 +185,8 @@ function create_new_comment(comment, viewer) {
         const div = "<div>" + comment.description + "</div>" +
               " (<a class='goto_line' onClick='" + handler + "'>rev. " +
               comment.sha.substring(0,6) + "</a>" + " / " +
-              "<a href='#' onClick='alert(\"Bump\");'>Bump</a>" +
-              ") ";
+              "<a class='goto_line' onClick='open_diff_view(\"" +
+              comment.file + "\", \"" + comment.sha + "\")'>Bump</a>) ";
         $("#other_comments").append($("<div id='comment_" +
                                       comment.id + "'>").html(div));
         comments[comment.id] = { desc: comment.description };
@@ -230,7 +268,6 @@ function scroll_overlay(id, viewer){
           textToScreenCoordinates(anchor.getPosition());
     const offset   = position.pageX + viewer.container.offsetWidth -
           300; // pageX starts after the gutter, 300 is the width of the overlay
-    console.log(position.pageX + " / " + viewer.container.offsetWidth);
     const div = $("#overlay_" + id)[0];
     div.style.left = offset + 'px';
     if (position.pageY >= 900)

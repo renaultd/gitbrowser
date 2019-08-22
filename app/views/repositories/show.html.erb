@@ -57,19 +57,18 @@
     <div id="other_comments" class="other_comments"></div>
   </div>
 
+  <div id="side_comments">
+    <button id="closediff_button">Close Diff</button>
+  </div>
+
+  <div id="side_viewer"></div>
+
 </div>
 
 <script>
   var base_viewer = ace.edit("viewer");
   var comments = {}; // Dict to centralize the comments
   base_viewer.setReadOnly(true);
-  base_viewer.$blockScrolling = Infinity; // fix logs
-  base_viewer.setOptions({
-      highlightActiveLine: false,
-      fontSize: "13pt",
-      theme: 'ace/theme/chrome',
-  });
-  base_viewer.renderer.setAnimatedScroll(true);
 
   <% if @selected_revision %>
     fetch_file_list(base_viewer, "<%= @selected_revision[:sha] %>");
@@ -78,5 +77,6 @@
   $("#head_revision").click(() => load_head_revision(base_viewer));
   $("#warning_button").click(save_new_comment("warning", base_viewer));
   $("#error_button").click(save_new_comment("error", base_viewer));
+  $("#closediff_button").click(close_diff_view);
   $("#toggle_comments").click(toggle_comments);
 </script>
