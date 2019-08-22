@@ -3,9 +3,15 @@
   <div style="display: flex;
               flex-direction: column;">
     <div>
-      <a href="<%= repositories_path %>">Repository&nbsp;:</a>
-      <%= @repository.address %>
-      (<a href="<%= edit_repository_path(@repository) %>">edit</a>)
+      <div class="repository_name">
+        <%= @repository.address %>
+        <br/>
+        <a href="<%= edit_repository_path(@repository) %>">Edit</a>
+        /
+        <a href="<%= repositories_path %>">Home</a>
+        /
+        <a href="#" id="head_revision">Head</a>
+      </div>
       <input type="hidden" id="repository_id"
              value="<%= @repository.id %>"/>
       <input type="hidden" id="revision"
@@ -28,7 +34,7 @@
       </select>
     </div>
 
-    <div style="height: 500px;">
+    <div>
       <ul id="file_tree">
 
       </ul>
@@ -52,16 +58,13 @@
     <button id="error_button">Highlight error</button>
     <button id="toggle_comments">Toggle comments</button>
 
-    <p/>
-    Current comments&nbsp;:
-    <div id="current_comments" style="background-color:rgb(200,200,255)">
+    <p></p>
 
-    </div>
+    Current comments&nbsp;:
+    <div id="current_comments" class="current_comments"></div>
 
     Other comments &nbsp;:
-    <div id="other_comments" style="background-color:rgb(200,200,215)">
-
-    </div>
+    <div id="other_comments" class="other_comments"></div>
   </div>
 
 </div>
@@ -86,6 +89,7 @@
               "<%= @selected_revision[:sha] %>");
   <% end %>
 
+  $("#head_revision").click(load_head_revision);
   $("#warning_button").click(save_new_comment("warning"));
   $("#error_button").click(save_new_comment("error"));
   $("#toggle_comments").click(toggle_comments);

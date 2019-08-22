@@ -59,7 +59,6 @@ function init_viewer(data) {
 // Fetch a file's contents on the server with the possible comments,
 // and display them in the UI.
 function load_file(filename, sha) {
-    console.log("load_file");
     $.ajax({
         dataType: 'text',
         url : '/repositories/fetch_file' +
@@ -74,9 +73,12 @@ function load_file(filename, sha) {
 }
 
 function load_file_and_revisions(filename, sha) {
-    console.log("load_file_and_revisions");
     $("#filename").val(filename);
     fetch_file_list(sha); // also loads the file
+}
+
+function load_head_revision() {
+    fetch_file_list($("#revision_selector option:first").val());
 }
 
 // Given a list of files retrieved with `fetch_file_list`, populate a
@@ -115,9 +117,7 @@ function load_files(data) {
 // Create a new comment inside the UI -- does *not* create the comment
 // on the server.
 function create_new_comment(comment) {
-    console.log("Comment : " + comment.id);
     if (comment.sha == $("#revision").val()) {
-        console.log("Current");
         const div = "<div>" + comment.description +
               "</div> <a class='goto_line' onclick='viewer.gotoLine(" +
               (comment.range.start.row+1) + ", " +
@@ -140,7 +140,6 @@ function create_new_comment(comment) {
                                  desc: comment.description };
         create_overlay(comment.id);
     } else {
-        console.log("Other");
         const handler = "load_file_and_revisions(\"" +
               comment.file + "\",\"" + comment.sha + "\");"
         const div = "<div>" + comment.description + "</div>" +

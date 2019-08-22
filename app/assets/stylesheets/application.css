@@ -76,6 +76,12 @@ a.goto_line {
 .viewer_overlay_error textarea {
     background: rgba(255,220,200,0.5);
 }
+div.current_comments {
+    background-color:rgba(150,200,255,1.0);
+}
+div.other_comments {
+    background-color:rgba(200,200,215,1.0);
+}
 div.destroy_button {
     position:absolute;
     left:300px; top:-1px;
@@ -83,4 +89,9 @@ div.destroy_button {
     background: white;
     border: 1px solid black;
     z-index: 99;
+}
+div.repository_name {
+    background: rgba(150,200,255,1.0);
+    font-family: sans;
+    font-size: smaller;
 }
