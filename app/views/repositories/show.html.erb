@@ -21,7 +21,7 @@
     </div>
 
     <div>
-      <select id="revision_selector" onChange="fetch_file_list()">
+      <select id="revision_selector" onChange="fetch_file_list(base_viewer)">
         <% @revisions.each_with_index do |r| %>
         <option value="<%= r[:sha] %>"
                 <% if r[:sha] == @selected_revision[:sha] %>
@@ -36,21 +36,14 @@
 
     <div>
       <ul id="file_tree">
-
       </ul>
     </div>
   </div>
 
   <div id="viewer" style="height: 900px; width: 900px; flex: 0 0 900px">
-
   </div>
 
   <div id="overlays">
-
-  </div>
-
-  <div id="tooltip" class="viewer_tooltip" style="display:none">
-
   </div>
 
   <div>
@@ -70,27 +63,23 @@
 </div>
 
 <script>
-  var viewer = ace.edit("viewer");
+  var base_viewer = ace.edit("viewer");
   var comments = {}; // Dict to centralize the comments
-  viewer.setReadOnly(true);
-  viewer.$blockScrolling = Infinity; // fix logs
-  viewer.setOptions({
+  base_viewer.setReadOnly(true);
+  base_viewer.$blockScrolling = Infinity; // fix logs
+  base_viewer.setOptions({
       highlightActiveLine: false,
       fontSize: "13pt",
       theme: 'ace/theme/chrome',
   });
-  viewer.renderer.setAnimatedScroll(true);
+  base_viewer.renderer.setAnimatedScroll(true);
 
   <% if @selected_revision %>
-    fetch_file_list("<%= @selected_revision[:sha] %>");
-  <% end %>
-  <% if @selected_file %>
-    load_file("<%= @selected_file %>",
-              "<%= @selected_revision[:sha] %>");
+    fetch_file_list(base_viewer, "<%= @selected_revision[:sha] %>");
   <% end %>
 
-  $("#head_revision").click(load_head_revision);
-  $("#warning_button").click(save_new_comment("warning"));
-  $("#error_button").click(save_new_comment("error"));
+  $("#head_revision").click(() => load_head_revision(base_viewer));
+  $("#warning_button").click(save_new_comment("warning", base_viewer));
+  $("#error_button").click(save_new_comment("error", base_viewer));
   $("#toggle_comments").click(toggle_comments);
 </script>

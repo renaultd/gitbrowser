@@ -6,8 +6,9 @@
 
 // Hook called when selecting the revision `sha`, calling the server
 // for a list of file and filling the page with it. If `sha` is not
-// provided, it is searched into $('#revision_selector').val()
-function fetch_file_list(sha) {
+// provided, it is searched into $('#revision_selector').val().
+// Otherwise, this function is the callback for this selector.
+function fetch_file_list(viewer, sha) {
     var real_sha;
     if (sha) {
         real_sha = sha;
@@ -22,15 +23,15 @@ function fetch_file_list(sha) {
             '&sha=' + real_sha })
         .done(function(data) {
             $("#revision").val(real_sha);
-            load_files(data);
+            load_files(data, viewer);
             const file = $("#filename").val();
-            if (file) { load_file(file, real_sha); }
+            if (file) { load_file(file, real_sha, viewer); }
         });
 }
 
-// Remove a comment from the UI -- does *not* remove the comment from
-// the server.
-function clear_comment(id) {
+// Remove a comment from a viewer -- does *not* remove the comment
+// from the server.
+function clear_comment(id, viewer) {
     const comment = comments[id];
     if (comment.marker_id) {
         viewer.getSession().removeMarker(comment.marker_id);
@@ -42,23 +43,23 @@ function clear_comment(id) {
     delete comments[id];
 }
 
-function clear_comments() {
-    Object.keys(comments).forEach(clear_comment);
+function clear_comments(viewer) {
+    Object.keys(comments).forEach((c) => clear_comment(c, viewer));
 }
 
-// Load the ACE viewer with `data` as its contents.
-function init_viewer(data) {
+// Load an Ace viewer with `data` as its contents.
+function init_viewer(viewer, data) {
     let json = JSON.parse(data);
     viewer.setValue(json["contents"]);
     viewer.session.setMode(json["mode"]);
     viewer.clearSelection();
     viewer.navigateFileStart();
-    clear_comments();
+    clear_comments(viewer);
 }
 
 // Fetch a file's contents on the server with the possible comments,
-// and display them in the UI.
-function load_file(filename, sha) {
+// and display them in the viewer.
+function load_file(filename, sha, viewer) {
     $.ajax({
         dataType: 'text',
         url : '/repositories/fetch_file' +
@@ -67,23 +68,23 @@ function load_file(filename, sha) {
             "&file=" + filename })
         .done(function(data) {
             $("#filename").val(filename);
-            init_viewer(data);
-            load_comments(filename, sha);
+            init_viewer(viewer, data);
+            load_comments(filename, sha, viewer);
         });
 }
 
-function load_file_and_revisions(filename, sha) {
+function load_file_and_revisions(filename, sha, viewer) {
     $("#filename").val(filename);
-    fetch_file_list(sha); // also loads the file
+    fetch_file_list(viewer, sha); // also loads the file
 }
 
-function load_head_revision() {
-    fetch_file_list($("#revision_selector option:first").val());
+function load_head_revision(viewer) {
+    fetch_file_list(viewer, $("#revision_selector option:first").val());
 }
 
 // Given a list of files retrieved with `fetch_file_list`, populate a
-// tree of the files in the UI.
-function load_files(data) {
+// tree of the files in the viewer.
+function load_files(data, viewer) {
     $("#file_tree").empty();
     const revision = $("#revision_selector").val();
     const keys = Object.keys(data);
@@ -111,13 +112,13 @@ function load_files(data) {
     fill_level("");
     $("#file_tree a").click((event) =>
                             load_file($(event.target).data("file"),
-                                      $("#revision").val()));
+                                      $("#revision").val(), viewer));
 }
 
-// Create a new comment inside the UI -- does *not* create the comment
-// on the server.
-function create_new_comment(comment) {
-    if (comment.sha == $("#revision").val()) {
+// Create a new comment connected to a viewer -- does *not* create the
+// comment on the server.
+function create_new_comment(comment, viewer) {
+    if (comment.sha == $("#revision").val()) { // Current revision
         const div = "<div>" + comment.description +
               "</div> <a class='goto_line' onclick='viewer.gotoLine(" +
               (comment.range.start.row+1) + ", " +
@@ -138,13 +139,16 @@ function create_new_comment(comment) {
                                  range: range,
                                  ctype: comment.ctype,
                                  desc: comment.description };
-        create_overlay(comment.id);
-    } else {
+        create_overlay(comment.id, viewer);
+    } else { // Comment for an older revision
         const handler = "load_file_and_revisions(\"" +
-              comment.file + "\",\"" + comment.sha + "\");"
+              comment.file + "\",\"" + comment.sha + "\"," +
+              "ace.edit(\"" + viewer.container.id + "\"));"
         const div = "<div>" + comment.description + "</div>" +
               " (<a class='goto_line' onClick='" + handler + "'>rev. " +
-              comment.sha.substring(0,6) + "</a>) ";
+              comment.sha.substring(0,6) + "</a>" + " / " +
+              "<a href='#' onClick='alert(\"Bump\");'>Bump</a>" +
+              ") ";
         $("#other_comments").append($("<div id='comment_" +
                                       comment.id + "'>").html(div));
         comments[comment.id] = { desc: comment.description };
@@ -152,8 +156,8 @@ function create_new_comment(comment) {
     $("a[data-file='" + comment.file + "']").addClass("commented_file");
 }
 
-// Save a comment on the server, then display it in the UI.
-function save_new_comment(type) {
+// Save a comment on the server, then display it in the viewer.
+function save_new_comment(type, viewer) {
     return function () {
         const range = viewer.getSelectionRange();
         $.ajax({
@@ -165,7 +169,7 @@ function save_new_comment(type) {
                 "&range=" + JSON.stringify(range) +
                 "&type=" + type})
             .done(function(data) {
-                create_new_comment(data);
+                create_new_comment(data, viewer);
                 $("#overlay_" + data["id"] + " textarea").select();
             });
     }
@@ -188,15 +192,15 @@ function save_comment_description(comment_id, text) {
         });
 }
 
-// Destroy a comment on the server and on the UI.
-function destroy_comment(comment_id) {
+// Destroy a comment on the server and on the viewer.
+function destroy_comment(comment_id, viewer) {
     $.ajax({
         dataType: 'json',
         url: '/repositories/del_comment' +
             '?id=' + $("#repository_id").val() +
             '&comment_id=' + comment_id })
         .done(function () {
-            clear_comment(comment_id);
+            clear_comment(comment_id, viewer);
             if ($("#current_comments a").length +
                   $("#other_comments a").length == 0)
                 $("a[data-file='" + $("#filename").val() + "']").
@@ -205,8 +209,8 @@ function destroy_comment(comment_id) {
 }
 
 // Load the comments for a given file from the server and display them
-// on the UI (typically with `create_new_comment`)
-function load_comments(filename, sha) {
+// on the viewer (typically with `create_new_comment`)
+function load_comments(filename, sha, viewer) {
     $.ajax({
         dataType: 'json',
         url: '/repositories/fetch_comments' +
@@ -214,7 +218,7 @@ function load_comments(filename, sha) {
             '&file=' + filename })
         .done(function(data) {
             $("#current_comments").empty();
-            data.forEach(create_new_comment);
+            data.forEach((c) => create_new_comment(c, viewer));
         });
 }
 
@@ -239,9 +243,10 @@ function watch_area(event, elem) {
     }
 }
 
-// Function that creates the overlay for a comment, meaning the small
-// text area that scrolls with the highlighted comment.
-function create_overlay(id) {
+// Function that creates the overlay for a comment associated to the
+// viewer, meaning the small text area that scrolls with the
+// highlighted comment.
+function create_overlay(id, viewer) {
     const comment = comments[id];
     var session = viewer.getSession();
     var document = session.getDocument();
@@ -250,8 +255,9 @@ function create_overlay(id) {
 
     $('<div id="overlay_' + id + '" class="viewer_overlay viewer_overlay_' +
       comment.ctype + '">' +
-      '<div class="destroy_button"><a onclick="destroy_comment(' + id +
-      ')">&#10060;</a></div>' +
+      '<div class="destroy_button">' +
+      '<a onclick="destroy_comment(' + id + ", ace.edit('" +
+      viewer.container.id + "'))\">&#10060;</a></div>" +
       '<textarea data-comment="' + id +
       '" onkeyup="watch_area(event, this)">' +
       comment.desc + '</textarea>' + '</div>').
