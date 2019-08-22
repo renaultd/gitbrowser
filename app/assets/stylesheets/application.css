@@ -56,6 +56,17 @@ a.goto_line {
 .viewer_overlay_error textarea {
     background: rgba(255,220,200,0.5);
 }
+div#global {
+    display:flex;
+}
+div#viewer {
+    height: 900px;
+    width: 900px;
+    flex: 2.5 1 0;
+}
+div#comments, div#revisions {
+    flex: 1 1 0;
+}
 div.current_comments {
     background-color:rgba(150,200,255,1.0);
 }
@@ -69,6 +80,7 @@ div.destroy_button {
     background: white;
     border: 1px solid black;
     z-index: 99;
+    font-size: xx-small;
 }
 div.repository_name {
     background: rgba(150,200,255,1.0);

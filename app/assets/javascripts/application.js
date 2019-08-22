@@ -224,9 +224,15 @@ function load_comments(filename, sha, viewer) {
 
 // Callback used to move a comment's "overlay" when the code is
 // scrolled up or down.
-function update_overlay(id, position){
-    var div = $("#overlay_" + id)[0];
-    div.style.left = (position.pageX + 800) + 'px'; // 800 is the offset
+function scroll_overlay(id, viewer){
+    const anchor   = comments[id].anchor;
+    const position = viewer.renderer.
+          textToScreenCoordinates(anchor.getPosition());
+    const offset   = position.pageX + viewer.container.offsetWidth -
+          300; // pageX starts after the gutter, 300 is the width of the overlay
+    console.log(position.pageX + " / " + viewer.container.offsetWidth);
+    const div = $("#overlay_" + id)[0];
+    div.style.left = offset + 'px';
     if (position.pageY >= 900)
         div.style.display = "none";
     else {
@@ -263,12 +269,8 @@ function create_overlay(id, viewer) {
       comment.desc + '</textarea>' + '</div>').
         appendTo('#overlays');
 
-    update_overlay(id, viewer.renderer.
-                   textToScreenCoordinates(anchor.getPosition()));
-    const callb = function(scrollTop){
-        update_overlay(id, viewer.renderer.
-                       textToScreenCoordinates(anchor.getPosition()));
-    };
+    scroll_overlay(id, viewer);
+    const callb = (scrollTop) => scroll_overlay(id, viewer)
     session.on("changeScrollTop", callb);
     comment.callb = callb;
 }

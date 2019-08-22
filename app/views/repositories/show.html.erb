@@ -1,7 +1,6 @@
-<div style="display:flex">
+<div id="global">
 
-  <div style="display: flex;
-              flex-direction: column;">
+  <div id="revisions">
     <div>
       <div class="repository_name">
         <%= @repository.address %>
@@ -40,13 +39,11 @@
     </div>
   </div>
 
-  <div id="viewer" style="height: 900px; width: 900px; flex: 0 0 900px">
-  </div>
+  <div id="viewer"></div>
 
-  <div id="overlays">
-  </div>
+  <div id="overlays"></div>
 
-  <div>
+  <div id="comments">
     <button id="warning_button">Highlight warning</button>
     <button id="error_button">Highlight error</button>
     <button id="toggle_comments">Toggle comments</button>
