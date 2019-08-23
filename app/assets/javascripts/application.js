@@ -4,6 +4,7 @@
 //= require jquery-ui
 //= require_tree .
 
+// Global Range object defined in Ace.js
 const Range = require("ace/range").Range;
 
 // Returns the first revision on the revision_selector
@@ -57,6 +58,7 @@ function clear_comments(viewer) {
 
 // Load an Ace viewer with `data` as its contents.
 function init_viewer(viewer, data) {
+    $(viewer.container).css("height", $(window).height() - 60);
     viewer.$blockScrolling = Infinity; // fix logs
     viewer.setOptions({
         highlightActiveLine: false,
@@ -72,7 +74,8 @@ function init_viewer(viewer, data) {
 }
 
 // Fetch a file's contents on the server with the possible comments,
-// and display them in the viewer.
+// and display them in the viewer. `comments` indicate whether to load
+// the comments as well (associated to the same viewer).
 function load_file(filename, sha, viewer, comments) {
     $.ajax({
         dataType: 'text',
@@ -82,6 +85,8 @@ function load_file(filename, sha, viewer, comments) {
             "&file=" + filename })
         .done(function(data) {
             $("#filename").val(filename);
+	    $(viewer.container).siblings(".viewer_header").
+		html(filename + " @ " + sha.substring(0,6));
             init_viewer(viewer, data);
             if (comments) {
                 clear_comments(viewer);
@@ -133,16 +138,19 @@ function load_files(data, viewer) {
                                       viewer, true));
 }
 
-// Displays the second viewer to have a diff between the two files
-function open_diff_view(filename, sha) {
+// Displays the second viewer to have a diff between the two
+// files. The existing viewer is passed as a parameter so it can be
+// resized.
+function open_diff_view(viewer, filename, sha) {
     $("#revisions").css("visibility", "collapse");
     $("#overlays").css("visibility", "collapse");
     $("#comments").css("visibility", "collapse");
     $("#side_viewer").css("visibility", "visible");
     $("#side_comments").css("visibility", "visible");
     $("#side_comments_div").empty();
-    const side_viewer = ace.edit("side_viewer");
+    const side_viewer = ace.edit("side_viewer_div");
     load_file(filename, sha, side_viewer, false);
+    viewer.resize();
     // TODO : Clear possibly existing comments
     Object.keys(comments).forEach((c) => {
         if (comments[c].sha == sha) {
@@ -152,13 +160,16 @@ function open_diff_view(filename, sha) {
     });
 }
 
-function close_diff_view() {
+// Close the diff view. The remaining viewer is passed as a parameter
+// so it can be resized.
+function close_diff_view(viewer) {
     $("#revisions").css("visibility", "visible");
     $("#overlays").css("visibility", "visible");
     $("#comments").css("visibility", "visible");
     $("#side_viewer").css("visibility", "collapse");
     $("#side_comments").css("visibility", "collapse");
-    ace.edit("side_viewer").destroy();
+    ace.edit("side_viewer_div").destroy();
+    viewer.resize();
 }
 
 // Add a new highlighted section into the viewer
@@ -192,7 +203,8 @@ function append_other_comment(id, div, viewer) {
     const hdiv = "<div>" + comment.desc + "</div>" +
           " (<a class='goto_line' onClick='" + handler + "'>rev. " +
           comment.sha.substring(0,6) + "</a>" + " / " +
-          "<a class='goto_line' onClick='open_diff_view(\"" +
+          "<a class='goto_line' onClick='open_diff_view(ace.edit(\"" +
+	  viewer.container.id + "\"),\"" +
           comment.file + "\", \"" + comment.sha + "\")'>Bump</a>) ";
     $("#" + div).append($("<div id='comment_" +
                           comment.id + "' " +

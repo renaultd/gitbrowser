@@ -60,8 +60,6 @@ div#global {
     display:flex;
 }
 div#viewer, div#side_viewer {
-    height: 900px;
-    width: 900px;
     flex: 2.5 1 0;
 }
 div#side_viewer, div#side_comments {
@@ -69,6 +67,21 @@ div#side_viewer, div#side_comments {
 }
 div#comments, div#revisions, div#side_comments {
     flex: 1 1 0;
+}
+div.viewer_header {
+    text-align: center;
+    height: 30px;
+    line-height: 30px;
+    font-family: sans;
+    font-size: larger;
+    font-weight: bold;
+    padding: 2px;
+    color: white;
+    background: rgba(75,100,255,1.0);
+    border: 1px solid blue;
+}
+div.viewer_container {
+    height: 100px;
 }
 div.current_comment {
     background-color:rgba(150,200,255,1.0);

@@ -39,7 +39,10 @@
     </div>
   </div>
 
-  <div id="viewer"></div>
+  <div id="viewer">
+    <div class="viewer_header"><%= @selected_file %></div>
+    <div id="viewer_div" class="viewer_container"></div>
+  </div>
 
   <div id="overlays"></div>
 
@@ -62,12 +65,15 @@
     <div id="side_comments_div"></div>
   </div>
 
-  <div id="side_viewer"></div>
+  <div id="side_viewer">
+    <div class="viewer_header"></div>
+    <div id="side_viewer_div" class="viewer_container">
+  </div>
 
 </div>
 
 <script>
-  var base_viewer = ace.edit("viewer");
+  var base_viewer = ace.edit("viewer_div");
   var comments = {}; // Dict to centralize the comments
   base_viewer.setReadOnly(true);
 
@@ -78,6 +84,6 @@
   $("#head_revision").click(() => load_head_revision(base_viewer));
   $("#warning_button").click(save_new_comment("warning", base_viewer));
   $("#error_button").click(save_new_comment("error", base_viewer));
-  $("#closediff_button").click(close_diff_view);
+  $("#closediff_button").click(() => close_diff_view(base_viewer));
   $("#toggle_comments").click(toggle_comments);
 </script>
