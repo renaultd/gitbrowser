@@ -72,9 +72,13 @@ div#comments, div#revisions, div#side_comments {
 }
 div.current_comment {
     background-color:rgba(150,200,255,1.0);
+    border: 1px solid gray;
+    margin: 3px;
 }
 div.other_comment {
     background-color:rgba(200,200,215,1.0);
+    border: 1px solid gray;
+    margin: 3px;
 }
 div.destroy_button {
     position:absolute;
