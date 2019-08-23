@@ -1,6 +1,7 @@
 class Repository < ApplicationRecord
   validates :address, presence: true
   validates :filter, presence: true
+  has_many :comments
 
   def git_dir
     return File.join(self.address, ".git")
