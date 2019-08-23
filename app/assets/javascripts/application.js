@@ -4,6 +4,8 @@
 //= require jquery-ui
 //= require_tree .
 
+const Range = require("ace/range").Range;
+
 // Returns the first revision on the revision_selector
 function get_first_revision() {
     return $("#revision_selector option:first").val();
@@ -40,7 +42,8 @@ function clear_comment(id, viewer) {
     const comment = comments[id];
     if (comment.marker_id) {
         viewer.getSession().removeMarker(comment.marker_id);
-        comment.anchor.detach();
+        if (comment.anchor)
+            comment.anchor.detach();
         $("#overlay_" + id).remove();
         viewer.session.removeListener("changeScrollTop", comment.callb);
     }
@@ -137,11 +140,16 @@ function open_diff_view(filename, sha) {
     $("#comments").css("visibility", "collapse");
     $("#side_viewer").css("visibility", "visible");
     $("#side_comments").css("visibility", "visible");
+    $("#side_comments_div").empty();
     const side_viewer = ace.edit("side_viewer");
     load_file(filename, sha, side_viewer, false);
     // TODO : Clear possibly existing comments
-    Object.keys(comments).forEach((c) =>
-         $("#side_comments").append("<div>" + comments[c].desc + "</div>"));
+    Object.keys(comments).forEach((c) => {
+        if (comments[c].sha == sha) {
+            highlight_range(c, side_viewer);
+            append_current_comment(c, "side_comments_div", side_viewer);
+        }
+    });
 }
 
 function close_diff_view() {
@@ -153,43 +161,74 @@ function close_diff_view() {
     ace.edit("side_viewer").destroy();
 }
 
-// Create a new comment connected to a viewer -- does *not* create the
-// comment on the server.
+// Add a new highlighted section into the viewer
+function highlight_range(id, viewer) {
+    const marker = viewer.session.addMarker(comments[id].range,
+                                            "viewer_sel_" + comments[id].ctype,
+                                            "line");
+    comments[id].marker_id = marker;
+}
+
+// Append a comment line to the list of comments
+function append_current_comment(id, div, viewer) {
+    const comment = comments[id];
+    const hdiv = "<div>" + comment.desc +
+          "</div> <a class='goto_line' onclick='ace.edit(\"" +
+          viewer.container.id + "\").gotoLine(" +
+          (comment.range.start.row+1) + ", " +
+          comment.range.start.column +
+          ", false)'>(l. " + (comment.range.start.row+1) +
+          "-" + (comment.range.end.row+1) + ")</a>";
+    $("div#" + div).append($("<div id='comment_" +
+                             comment.id + "' " +
+                             "class='current_comment'>").html(hdiv));
+}
+
+function append_other_comment(id, div, viewer) {
+    const comment = comments[id];
+    const handler = "load_file_and_revisions(\"" +
+          comment.file + "\",\"" + comment.sha + "\"," +
+          "ace.edit(\"" + viewer.container.id + "\"));"
+    const hdiv = "<div>" + comment.desc + "</div>" +
+          " (<a class='goto_line' onClick='" + handler + "'>rev. " +
+          comment.sha.substring(0,6) + "</a>" + " / " +
+          "<a class='goto_line' onClick='open_diff_view(\"" +
+          comment.file + "\", \"" + comment.sha + "\")'>Bump</a>) ";
+    $("#" + div).append($("<div id='comment_" +
+                          comment.id + "' " +
+                          "class='other_comment'>").html(hdiv));
+}
+
+// Create a new comment connected to a viewer. The comment is a hash
+// object of the form :
+// { id,
+//   range: { start: { row, column },
+//            end:   { row, column } },
+//   ctype,
+//   description,
+//   sha,
+//   file  }
+//
+// This comment can be another comment or a hash object. The function
+// does *not* create the comment on the server, and does *not* check
+// if the comment already exists (in this case it purely overwrites it).
 function create_new_comment(comment, viewer) {
+    const range = new Range(comment.range.start.row,
+                            comment.range.start.column,
+                            comment.range.end.row,
+                            comment.range.end.column);
+    comments[comment.id] = { id: comment.id,
+                             sha: comment.sha,
+                             file: comment.file,
+                             range: range,
+                             ctype: comment.ctype,
+                             desc: comment.description };
     if (comment.sha == $("#revision").val()) { // Current revision
-        const div = "<div>" + comment.description +
-              "</div> <a class='goto_line' onclick='viewer.gotoLine(" +
-              (comment.range.start.row+1) + ", " +
-              comment.range.start.column +
-              ", false)'>(l. " + (comment.range.start.row+1) +
-              "-" + (comment.range.end.row+1) + ")</a>";
-        $("#current_comments").append($("<div id='comment_" +
-                                        comment.id + "'>").html(div));
-        const Range = require("ace/range").Range;
-        const range = new Range(comment.range.start.row,
-                                comment.range.start.column,
-                                comment.range.end.row,
-                                comment.range.end.column);
-        const marker = viewer.session.addMarker(range,
-                                                "viewer_sel_" + comment.ctype,
-                                                "line");
-        comments[comment.id] = { marker_id: marker,
-                                 range: range,
-                                 ctype: comment.ctype,
-                                 desc: comment.description };
+        append_current_comment(comment.id, "current_comments_div", viewer);
+        highlight_range(comment.id, viewer);
         create_overlay(comment.id, viewer);
     } else { // Comment for an older revision
-        const handler = "load_file_and_revisions(\"" +
-              comment.file + "\",\"" + comment.sha + "\"," +
-              "ace.edit(\"" + viewer.container.id + "\"));"
-        const div = "<div>" + comment.description + "</div>" +
-              " (<a class='goto_line' onClick='" + handler + "'>rev. " +
-              comment.sha.substring(0,6) + "</a>" + " / " +
-              "<a class='goto_line' onClick='open_diff_view(\"" +
-              comment.file + "\", \"" + comment.sha + "\")'>Bump</a>) ";
-        $("#other_comments").append($("<div id='comment_" +
-                                      comment.id + "'>").html(div));
-        comments[comment.id] = { desc: comment.description };
+        append_other_comment(comment.id, "other_comments_div", viewer);
     }
     $("a[data-file='" + comment.file + "']").addClass("commented_file");
 }

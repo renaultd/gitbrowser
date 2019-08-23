@@ -70,10 +70,10 @@ div#side_viewer, div#side_comments {
 div#comments, div#revisions, div#side_comments {
     flex: 1 1 0;
 }
-div.current_comments {
+div.current_comment {
     background-color:rgba(150,200,255,1.0);
 }
-div.other_comments {
+div.other_comment {
     background-color:rgba(200,200,215,1.0);
 }
 div.destroy_button {
