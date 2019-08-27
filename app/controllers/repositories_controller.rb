@@ -94,6 +94,12 @@ class RepositoriesController < ApplicationController
     @comment.save
   end
 
+  def save_comment_range
+    @comment = Comment.find(params[:comment_id])
+    @comment.range = JSON.parse(params[:range])
+    @comment.save
+  end
+
   def fetch_comments
     file = params[:file]
     @comments = Comment.where(repository_id: @repository.id,

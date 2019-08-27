@@ -172,7 +172,8 @@ function close_diff_view(viewer) {
     viewer.resize();
 }
 
-// Add a new highlighted section into the viewer
+// Add a new highlighted section into the viewer.
+// The range is saved inside the comment with a `marker_id`.
 function highlight_range(id, viewer) {
     const marker = viewer.session.addMarker(comments[id].range,
                                             "viewer_sel_" + comments[id].ctype,
@@ -192,7 +193,8 @@ function append_current_comment(id, div, viewer) {
         comment.range.start.column +
         ", false)'>Goto l. " + (comment.range.start.row+1) +
         "-" + (comment.range.end.row+1) + "</a>";
-    // hdiv += " / <a class='goto_line'>Edit</a>";
+    hdiv += " / <a class='goto_line' onclick='resize_comment(" +
+        id + ", ace.edit(\"" + viewer.container.id + "\"))'>Resize</a>";
     $("div#" + div).append($("<div id='comment_" +
                              comment.id + "' " +
                              "class='current_comment'>").html(hdiv));
@@ -267,10 +269,28 @@ function save_new_comment(type, viewer) {
     }
 }
 
+// Update the range of a comment on the server and on the UI.
+function resize_comment(id, viewer) {
+    const range = viewer.getSelectionRange();
+    if (!range.isEmpty())
+        $.ajax({
+                dataType: 'json',
+                url: '/repositories/save_comment_range' +
+                    '?id=' + $("#repository_id").val() +
+                    '&comment_id=' + id +
+                    '&range=' + JSON.stringify(range)})
+                .done(function(data) {
+                    const comment = comments[id];
+                    comments[comment.id].range = range;
+                    viewer.getSession().removeMarker(comment.marker_id);
+                    highlight_range(comment.id, viewer);
+                });
+}
+
 // Update a comment's description on the server and on the UI.
 function save_comment_description(comment_id, text) {
     $.ajax({
-            dataType: 'json',
+        dataType: 'json',
         url: '/repositories/save_comment_description' +
             '?id=' + $("#repository_id").val() +
             '&comment_id=' + comment_id +

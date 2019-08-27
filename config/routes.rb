@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   get '/repositories/fetch_file' => "repositories#fetch_file"
   get '/repositories/fetch_file_list' => "repositories#fetch_file_list"
   get '/repositories/save_comment_description' => "repositories#save_comment_description"
+  get '/repositories/save_comment_range' => "repositories#save_comment_range"
   resources :repositories
 
   # Route for '/'
