@@ -85,8 +85,8 @@ function load_file(filename, sha, viewer, comments) {
             "&file=" + filename })
         .done(function(data) {
             $("#filename").val(filename);
-	    $(viewer.container).siblings(".viewer_header").
-		html(filename + " @ " + sha.substring(0,6));
+            $(viewer.container).siblings(".viewer_header").
+                html(filename + " @ " + sha.substring(0,6));
             init_viewer(viewer, data);
             if (comments) {
                 clear_comments(viewer);
@@ -183,13 +183,16 @@ function highlight_range(id, viewer) {
 // Append a comment line to the list of comments
 function append_current_comment(id, div, viewer) {
     const comment = comments[id];
-    const hdiv = "<div>" + comment.desc +
-          "</div> <a class='goto_line' onclick='ace.edit(\"" +
-          viewer.container.id + "\").gotoLine(" +
-          (comment.range.start.row+1) + ", " +
-          comment.range.start.column +
-          ", false)'>(l. " + (comment.range.start.row+1) +
-          "-" + (comment.range.end.row+1) + ")</a>";
+    var hdiv = "<textarea class='edit_comment' data-comment='" +
+        id + "' onkeyup='watch_area(event, this)'>" +
+        comment.desc + "</textarea>";
+    hdiv += "<a class='goto_line' onclick='ace.edit(\"" +
+        viewer.container.id + "\").gotoLine(" +
+        (comment.range.start.row+1) + ", " +
+        comment.range.start.column +
+        ", false)'>Goto l. " + (comment.range.start.row+1) +
+        "-" + (comment.range.end.row+1) + "</a>";
+    // hdiv += " / <a class='goto_line'>Edit</a>";
     $("div#" + div).append($("<div id='comment_" +
                              comment.id + "' " +
                              "class='current_comment'>").html(hdiv));
@@ -204,7 +207,7 @@ function append_other_comment(id, div, viewer) {
           " (<a class='goto_line' onClick='" + handler + "'>rev. " +
           comment.sha.substring(0,6) + "</a>" + " / " +
           "<a class='goto_line' onClick='open_diff_view(ace.edit(\"" +
-	  viewer.container.id + "\"),\"" +
+          viewer.container.id + "\"),\"" +
           comment.file + "\", \"" + comment.sha + "\")'>Bump</a>) ";
     $("#" + div).append($("<div id='comment_" +
                           comment.id + "' " +
@@ -352,7 +355,7 @@ function create_overlay(id, viewer) {
       '<div class="destroy_button">' +
       '<a onclick="destroy_comment(' + id + ", ace.edit('" +
       viewer.container.id + "'))\">&#10060;</a></div>" +
-      '<textarea data-comment="' + id +
+      '<textarea class="edit_comment" data-comment="' + id +
       '" onkeyup="watch_area(event, this)">' +
       comment.desc + '</textarea>' + '</div>').
         appendTo('#overlays');
