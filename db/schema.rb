@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190813211946) do
+ActiveRecord::Schema.define(version: 20190827165907) do
 
   create_table "comments", force: :cascade do |t|
     t.integer "repository_id", null: false
@@ -19,6 +19,8 @@ ActiveRecord::Schema.define(version: 20190813211946) do
     t.string "range"
     t.string "description"
     t.integer "ctype"
+    t.integer "parent_id"
+    t.boolean "visible", default: true
   end
 
   create_table "repositories", force: :cascade do |t|

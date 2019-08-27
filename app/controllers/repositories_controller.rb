@@ -82,6 +82,9 @@ class RepositoriesController < ApplicationController
     if (params[:description])
       c[:description] = params[:description]
     end
+    if (params[:parent_id] && Comment.exists?(params[:parent_id]))
+      c[:parent_id] = params[:parent_id]
+    end
     c.save
     render :json => c.to_json
   end

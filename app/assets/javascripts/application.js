@@ -256,11 +256,12 @@ function append_diff_new_comment(id, viewer) {
             dataType: 'json',
             url: '/repositories/add_comment' +
                 '?id=' + $("#repository_id").val() +
+                '&parent_id=' + id +
                 '&sha=' + $("#revision").val() +
-                "&file=" + $("#filename").val() +
-                "&range=" + JSON.stringify(range) +
-                "&description=" + comments[id].desc +
-                "&type=" + comments[id].ctype})
+                '&file=' + $("#filename").val() +
+                '&range=' + JSON.stringify(range) +
+                '&description=' + comments[id].desc +
+                '&type=' + comments[id].ctype})
             .done(function(comment) {
                 add_to_comments(comment);
                 highlight_range(comment.id, viewer);
