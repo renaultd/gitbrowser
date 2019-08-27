@@ -178,8 +178,10 @@ function close_diff_view(viewer) {
     const current_sha = $("#revision").val();
     Object.keys(comments).forEach((c) => {
         if (comments[c].sha == current_sha) {
+            unhighlight_range(c, viewer);
             highlight_range(c, viewer);
         }
+        scroll_overlay(c, viewer);
     });
 }
 
@@ -193,7 +195,8 @@ function highlight_range(id, viewer) {
 }
 
 function unhighlight_range(id, viewer) {
-    viewer.getSession().removeMarker(comments[id].marker_id);
+    if (comments[id].marker_id)
+        viewer.getSession().removeMarker(comments[id].marker_id);
 }
 
 // Append a comment line to the list of comments
@@ -265,13 +268,21 @@ function append_diff_new_comment(id, viewer) {
             .done(function(comment) {
                 add_to_comments(comment);
                 highlight_range(comment.id, viewer);
+                create_overlay(comment.id, viewer);
                 var hdiv = "<textarea class='edit_comment'" +
                     " data-comment='" + comment.id + "'" +
                     " onkeyup='watch_area(event, this)'>" +
                     comments[comment.id].desc + "</textarea>";
+                hdiv += "<a class='goto_line' onclick='ace.edit(\"" +
+                    viewer.container.id + "\").gotoLine(" +
+                    (comment.range.start.row+1) + ", " +
+                    comment.range.start.column +
+                    ", false)'>Goto l. " + (comment.range.start.row+1) +
+                    "-" + (comment.range.end.row+1) + "</a>";
                 $("div#new_side_comment_div").append(
                     $("<div id='comment_" + comment.id +
                       "' class='current_comment'>").html(hdiv));
+                $("#comment_" + comment["id"] + " textarea").select();
             });
     }
 }
@@ -405,6 +416,8 @@ function load_comments(filename, sha, viewer) {
 // scrolled up or down.
 function scroll_overlay(id, viewer){
     const anchor   = comments[id].anchor;
+    if (!anchor) // Nothing to do
+        return;
     const position = viewer.renderer.
           textToScreenCoordinates(anchor.getPosition());
     const offset   = position.pageX + viewer.container.offsetWidth -

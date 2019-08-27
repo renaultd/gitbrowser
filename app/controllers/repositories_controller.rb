@@ -86,6 +86,9 @@ class RepositoriesController < ApplicationController
       c[:parent_id] = params[:parent_id]
     end
     c.save
+    if c.parent
+      c.parent.update_attributes(visible: false)
+    end
     render :json => c.to_json
   end
 
