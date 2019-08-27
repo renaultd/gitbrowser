@@ -79,6 +79,9 @@ class RepositoriesController < ApplicationController
                     sha:   sha,
                     range: range,
                     ctype: type)
+    if (params[:description])
+      c[:description] = params[:description]
+    end
     c.save
     render :json => c.to_json
   end

@@ -42,7 +42,7 @@ function fetch_file_list(viewer, sha) {
 function clear_comment(id, viewer) {
     const comment = comments[id];
     if (comment.marker_id) {
-        viewer.getSession().removeMarker(comment.marker_id);
+        unhighlight_range(id, viewer);
         if (comment.anchor)
             comment.anchor.detach();
         $("#overlay_" + id).remove();
@@ -141,21 +141,26 @@ function load_files(data, viewer) {
 // Displays the second viewer to have a diff between the two
 // files. The existing viewer is passed as a parameter so it can be
 // resized.
-function open_diff_view(viewer, filename, sha) {
+function open_diff_view(viewer, filename, id) {
     $("#revisions").css("visibility", "collapse");
     $("#overlays").css("visibility", "collapse");
     $("#comments").css("visibility", "collapse");
     $("#side_viewer").css("visibility", "visible");
     $("#side_comments").css("visibility", "visible");
-    $("#side_comments_div").empty();
+    $("#old_side_comment_div").empty();
+    $("#new_side_comment_div").empty();
     const side_viewer = ace.edit("side_viewer_div");
-    load_file(filename, sha, side_viewer, false);
+    const current_sha = $("#revision").val();
+    load_file(filename, comments[id].sha, side_viewer, false);
     viewer.resize();
-    // TODO : Clear possibly existing comments
     Object.keys(comments).forEach((c) => {
-        if (comments[c].sha == sha) {
+        if (comments[c].id == id) {
             highlight_range(c, side_viewer);
-            append_current_comment(c, "side_comments_div", side_viewer);
+            append_diff_comment(c, "old_side_comment_div",
+                                viewer, side_viewer);
+        }
+        if (comments[c].sha == current_sha) {
+            unhighlight_range(c, viewer);
         }
     });
 }
@@ -170,6 +175,12 @@ function close_diff_view(viewer) {
     $("#side_comments").css("visibility", "collapse");
     ace.edit("side_viewer_div").destroy();
     viewer.resize();
+    const current_sha = $("#revision").val();
+    Object.keys(comments).forEach((c) => {
+        if (comments[c].sha == current_sha) {
+            highlight_range(c, viewer);
+        }
+    });
 }
 
 // Add a new highlighted section into the viewer.
@@ -179,6 +190,10 @@ function highlight_range(id, viewer) {
                                             "viewer_sel_" + comments[id].ctype,
                                             "line");
     comments[id].marker_id = marker;
+}
+
+function unhighlight_range(id, viewer) {
+    viewer.getSession().removeMarker(comments[id].marker_id);
 }
 
 // Append a comment line to the list of comments
@@ -210,10 +225,67 @@ function append_other_comment(id, div, viewer) {
           comment.sha.substring(0,6) + "</a>" + " / " +
           "<a class='goto_line' onClick='open_diff_view(ace.edit(\"" +
           viewer.container.id + "\"),\"" +
-          comment.file + "\", \"" + comment.sha + "\")'>Bump</a>) ";
+          comment.file + "\", \"" + comment.id + "\")'>Bump</a>) ";
     $("#" + div).append($("<div id='comment_" +
                           comment.id + "' " +
                           "class='other_comment'>").html(hdiv));
+}
+
+function append_diff_comment(id, div, base_viewer, side_viewer) {
+    const comment = comments[id];
+    var hdiv = "<textarea class='edit_comment' data-comment='" +
+        id + "'>" + comment.desc + "</textarea>";
+    hdiv += "<a class='goto_line' onclick='ace.edit(\"" +
+        side_viewer.container.id + "\").gotoLine(" +
+        (comment.range.start.row+1) + ", " +
+        comment.range.start.column +
+        ", false)'>Goto l. " + (comment.range.start.row+1) +
+        "-" + (comment.range.end.row+1) + "</a>";
+    hdiv += " / <a class='goto_line' " +
+        "onclick='append_diff_new_comment(" + id +
+        ", ace.edit(\"" + base_viewer.container.id + "\"))'>Select</a>";
+    $("div#" + div).append($("<div id='comment_" +
+                             comment.id + "' " +
+                             "class='current_comment'>").html(hdiv));
+}
+
+function append_diff_new_comment(id, viewer) {
+    const range = viewer.getSelectionRange();
+    if (!range.isEmpty()) {
+        $.ajax({
+            dataType: 'json',
+            url: '/repositories/add_comment' +
+                '?id=' + $("#repository_id").val() +
+                '&sha=' + $("#revision").val() +
+                "&file=" + $("#filename").val() +
+                "&range=" + JSON.stringify(range) +
+                "&description=" + comments[id].desc +
+                "&type=" + comments[id].ctype})
+            .done(function(comment) {
+                add_to_comments(comment);
+                highlight_range(comment.id, viewer);
+                var hdiv = "<textarea class='edit_comment'" +
+                    " data-comment='" + comment.id + "'" +
+                    " onkeyup='watch_area(event, this)'>" +
+                    comments[comment.id].desc + "</textarea>";
+                $("div#new_side_comment_div").append(
+                    $("<div id='comment_" + comment.id +
+                      "' class='current_comment'>").html(hdiv));
+            });
+    }
+}
+
+function add_to_comments(comment) {
+    const range = new Range(comment.range.start.row,
+                            comment.range.start.column,
+                            comment.range.end.row,
+                            comment.range.end.column);
+    comments[comment.id] = { id: comment.id,
+                             sha: comment.sha,
+                             file: comment.file,
+                             range: range,
+                             ctype: comment.ctype,
+                             desc: comment.description };
 }
 
 // Create a new comment connected to a viewer. The comment is a hash
@@ -230,16 +302,7 @@ function append_other_comment(id, div, viewer) {
 // does *not* create the comment on the server, and does *not* check
 // if the comment already exists (in this case it purely overwrites it).
 function create_new_comment(comment, viewer) {
-    const range = new Range(comment.range.start.row,
-                            comment.range.start.column,
-                            comment.range.end.row,
-                            comment.range.end.column);
-    comments[comment.id] = { id: comment.id,
-                             sha: comment.sha,
-                             file: comment.file,
-                             range: range,
-                             ctype: comment.ctype,
-                             desc: comment.description };
+    add_to_comments(comment);
     if (comment.sha == $("#revision").val()) { // Current revision
         append_current_comment(comment.id, "current_comments_div", viewer);
         highlight_range(comment.id, viewer);
@@ -250,7 +313,8 @@ function create_new_comment(comment, viewer) {
     $("a[data-file='" + comment.file + "']").addClass("commented_file");
 }
 
-// Save a comment on the server, then display it in the viewer.
+// Save a comment (as highlighted on a viewer) on the server, then
+// display it in the viewer.
 function save_new_comment(type, viewer) {
     return function () {
         const range = viewer.getSelectionRange();
@@ -262,9 +326,9 @@ function save_new_comment(type, viewer) {
                 "&file=" + $("#filename").val() +
                 "&range=" + JSON.stringify(range) +
                 "&type=" + type})
-            .done(function(data) {
-                create_new_comment(data, viewer);
-                $("#overlay_" + data["id"] + " textarea").select();
+            .done(function(comment) {
+                create_new_comment(comment, viewer);
+                $("#overlay_" + comment["id"] + " textarea").select();
             });
     }
 }
@@ -281,9 +345,9 @@ function resize_comment(id, viewer) {
                     '&range=' + JSON.stringify(range)})
                 .done(function(data) {
                     const comment = comments[id];
-                    comments[comment.id].range = range;
-                    viewer.getSession().removeMarker(comment.marker_id);
-                    highlight_range(comment.id, viewer);
+                    unhighlight_range(id, viewer);
+                    comments[id].range = range;
+                    highlight_range(id, viewer);
                 });
 }
 
@@ -296,11 +360,13 @@ function save_comment_description(comment_id, text) {
             '&comment_id=' + comment_id +
             '&description=' + text })
         .done(() => {
-            const overlay = $("#overlay_" + comment_id + " textarea");
+            const overlay  = $("#overlay_" + comment_id + " textarea");
+            const textarea = $("#comment_" + comment_id + " textarea");
             comments[comment_id].desc = text;
             overlay.val(text);
             overlay.effect("highlight", {color:"#fff"});
-            $("#comment_" + comment_id + " div").html(text);
+            textarea.html(text);
+            textarea.effect("highlight", {color:"#fff"});
         });
 }
 
