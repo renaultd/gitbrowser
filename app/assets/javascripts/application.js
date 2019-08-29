@@ -1,6 +1,7 @@
 //= require jquery2
 //= require jquery_ujs
 //= require ace-rails-ap
+//= require ace/theme-chrome
 //= require jquery-ui
 //= require_tree .
 
@@ -26,7 +27,7 @@ function fetch_file_list(viewer, sha) {
     }
     $.ajax({
         dataType: 'json',
-        url: '/repositories/fetch_file_list' +
+        url: 'fetch_file_list' +
             '?id=' + $("#repository_id").val() +
             '&sha=' + real_sha })
         .done(function(data) {
@@ -79,7 +80,7 @@ function init_viewer(viewer, data) {
 function load_file(filename, sha, viewer, comments) {
     $.ajax({
         dataType: 'text',
-        url : '/repositories/fetch_file' +
+        url : 'fetch_file' +
             '?id=' + $("#repository_id").val() +
             '&sha=' + sha +
             "&file=" + filename })
@@ -257,7 +258,7 @@ function append_diff_new_comment(id, viewer) {
     if (!range.isEmpty()) {
         $.ajax({
             dataType: 'json',
-            url: '/repositories/add_comment' +
+            url: 'add_comment' +
                 '?id=' + $("#repository_id").val() +
                 '&parent_id=' + id +
                 '&sha=' + $("#revision").val() +
@@ -332,7 +333,7 @@ function save_new_comment(type, viewer) {
         const range = viewer.getSelectionRange();
         $.ajax({
             dataType: 'json',
-            url: '/repositories/add_comment' +
+            url: 'add_comment' +
                 '?id=' + $("#repository_id").val() +
                 '&sha=' + $("#revision").val() +
                 "&file=" + $("#filename").val() +
@@ -351,7 +352,7 @@ function resize_comment(id, viewer) {
     if (!range.isEmpty())
         $.ajax({
                 dataType: 'json',
-                url: '/repositories/save_comment_range' +
+                url: 'save_comment_range' +
                     '?id=' + $("#repository_id").val() +
                     '&comment_id=' + id +
                     '&range=' + JSON.stringify(range)})
@@ -367,7 +368,7 @@ function resize_comment(id, viewer) {
 function save_comment_description(comment_id, text) {
     $.ajax({
         dataType: 'json',
-        url: '/repositories/save_comment_description' +
+        url: 'save_comment_description' +
             '?id=' + $("#repository_id").val() +
             '&comment_id=' + comment_id +
             '&description=' + text })
@@ -386,7 +387,7 @@ function save_comment_description(comment_id, text) {
 function destroy_comment(comment_id, viewer) {
     $.ajax({
         dataType: 'json',
-        url: '/repositories/del_comment' +
+        url: 'del_comment' +
             '?id=' + $("#repository_id").val() +
             '&comment_id=' + comment_id })
         .done(function () {
@@ -403,7 +404,7 @@ function destroy_comment(comment_id, viewer) {
 function load_comments(filename, sha, viewer) {
     $.ajax({
         dataType: 'json',
-        url: '/repositories/fetch_comments' +
+        url: 'fetch_comments' +
             '?id=' + $("#repository_id").val() +
             '&file=' + filename })
         .done(function(data) {

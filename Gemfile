@@ -16,3 +16,6 @@ gem 'jquery-ui-rails'
 gem 'ace-rails-ap'
 
 gem 'listen'
+
+# For production
+gem 'uglifier'
