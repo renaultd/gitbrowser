@@ -55,7 +55,7 @@ a.goto_line {
 div#global {
     display:flex;
 }
-div#viewer, div#side_viewer {
+div#viewer, div#side_viewer, div#home {
     flex: 2.5 1 0;
 }
 div#side_viewer, div#side_comments {
@@ -79,9 +79,16 @@ div.viewer_header {
 div.viewer_container {
     height: 100px;
 }
-div.current_comment {
+div.visible_comment {
     background-color:rgba(150,200,255,1.0);
     border: 1px solid gray;
+    margin: 3px;
+    padding: 5px;
+}
+div.disabled_comment {
+    background-color:rgba(235,235,245,1.0);
+    border: 1px solid lightgray;
+    color: gray;
     margin: 3px;
     padding: 5px;
 }
@@ -110,4 +117,7 @@ textarea.edit_comment {
     border: 1px solid rgba(0,0,0,0.05);
     box-sizing: border-box;
     background-color: transparent;
+}
+div.show_comment {
+    font-family: sans;
 }

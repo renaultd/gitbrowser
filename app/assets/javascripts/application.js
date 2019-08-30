@@ -31,10 +31,14 @@ function fetch_file_list(viewer, sha) {
             load_files(data, viewer);
             const file = $("#filename").val();
             if (file) { load_file(file, real_sha, viewer, true); }
+            else { load_empty_file(viewer); }
         });
 }
 
-// Remove a comment from a viewer -- does *not* remove the comment
+// Remove a comment from a viewer
+//
+// Concretely, removes the highlighting, the anchor (if any) and the
+// overlay associated to a comment. It does *not* remove the comment
 // from the server.
 function clear_comment(id, viewer) {
     const comment = comments[id];
@@ -51,6 +55,8 @@ function clear_comment(id, viewer) {
 
 function clear_comments(viewer) {
     Object.keys(comments).forEach((c) => clear_comment(c, viewer));
+    $("#current_comments_div").empty();
+    $("#other_comments_div").empty();
 }
 
 // Load an Ace viewer with `data` as its contents.
@@ -82,12 +88,15 @@ function load_file(filename, sha, viewer, comments) {
             "&file=" + filename })
         .done(function(data) {
             $("#filename").val(filename);
+            $("#home").css("visibility", "collapse");
+            $("#viewer").css("visibility", "visible");
             $(viewer.container).siblings(".viewer_header").
                 html(filename + " @ " + sha.substring(0,6));
             init_viewer(viewer, data);
             if (comments) {
                 clear_comments(viewer);
                 load_comments(filename, sha, viewer);
+                $("#overlays").css("visibility", "visible");
             }
         });
 }
@@ -99,6 +108,90 @@ function load_file_and_revisions(filename, sha, viewer) {
 
 function load_head_revision(viewer) {
     fetch_file_list(viewer, $("#revision_selector option:first").val());
+}
+
+function load_empty_file(viewer) {
+    $("#home").css("visibility", "visible");
+    $("#viewer").css("visibility", "collapse");
+    $("#overlays").css("visibility", "collapse");
+    clear_comments(viewer);
+    $.ajax({
+        dataType: 'json',
+        url: 'fetch_comments' +
+            '?id=' + $("#repository_id").val() })
+        .done(function(data) {
+            data.forEach((c) => {
+                $("#all_comments_div").
+                    append($('<div>').html(
+                        render_comment(c, viewer, {
+                            detailed: true, linkable: true })));
+            }
+        )});
+}
+
+function goto_line(viewer, id) {
+    const range_start = comments[id].range.start;
+    viewer.gotoLine(range_start.row+1,
+                    range_start.column);
+}
+
+// Generic function that generates a comment div
+//
+// Options are : {
+//    editable:   bool
+//    linkable:   bool
+//    bumpable:   bool
+//    selectable: string    Id of the viewer into which code is selected
+//    detailed:   bool
+// }
+function render_comment(id, viewer, options) {
+    let comment;
+    if (isNaN(id))
+        comment = id;
+    else
+        comment = comments[id];
+    let hdiv;
+    if (options.editable)
+        hdiv = "<textarea class='edit_comment' data-comment='" +
+        id + "' onkeyup='watch_area(event, this)'>" +
+        comment.description + "</textarea>";
+    else {
+        hdiv = "<div class='show_comment' data-comment='" +
+            id + "'>"
+        if (options.detailed)
+            hdiv += comment.file + " (" +
+            comment.sha.substring(0,6) + ") : ";
+        hdiv += comment.description + "</div>";
+    }
+    if (options.linkable) {
+        hdiv += "<a class='goto_line' onclick='load_file_and_revisions(\"" +
+            comment.file + "\", \"" + comment.sha + "\", ace.edit(\"" +
+            viewer.container.id + "\"))'>rev." + comment.sha.substring(0,6) +
+            "</a>";
+    } else {
+        hdiv += "<a class='goto_line' onclick='goto_line(ace.edit(\"" +
+            viewer.container.id + "\"), " + comment.id +
+            ")'>Goto l. " + (comment.range.start.row+1) +
+            "-" + (comment.range.end.row+1) + "</a>";
+    }
+    if (options.editable) {
+        hdiv += " / <a class='goto_line' onclick='resize_comment(" +
+            id + ", ace.edit(\"" + viewer.container.id + "\"))'>Resize</a>";
+    }
+    if (options.bumpable) {
+        hdiv += " / <a class='goto_line' onClick='open_diff_view(ace.edit(\"" +
+            viewer.container.id + "\"),\"" +
+            comment.file + "\", " + comment.id + ")'>Bump</a>";
+    }
+    if (options.selectable) {
+        hdiv += " / <a class='goto_line' " +
+        "onclick='append_diff_new_comment(" + id +
+        ", ace.edit(\"" + options.selectable + "\"))'>Select</a>";
+    }
+    let hclass = comment.visible ?
+        (options.bumpable ? "other_comment" : "visible_comment") : "disabled_comment";
+    return $("<div id='comment_" + comment.id + "' " +
+             "class='" + hclass + "'>").html(hdiv);
 }
 
 // Given a list of files retrieved with `fetch_file_list`, populate a
@@ -153,7 +246,7 @@ function open_diff_view(viewer, filename, id) {
     Object.keys(comments).forEach((c) => {
         if (comments[c].id == id) {
             highlight_range(c, side_viewer);
-            append_diff_comment(c, "old_side_comment_div",
+            append_diff_old_comment(c, "old_side_comment_div",
                                 viewer, side_viewer);
         }
         if (comments[c].sha == current_sha) {
@@ -191,64 +284,33 @@ function highlight_range(id, viewer) {
     comments[id].marker_id = marker;
 }
 
+// Removes a highlighted section in a viewer.
 function unhighlight_range(id, viewer) {
-    if (comments[id].marker_id)
+    if (comments[id].marker_id) {
         viewer.getSession().removeMarker(comments[id].marker_id);
+        delete comments[id]['marker_id'];
+    }
 }
 
-// Append a comment line to the list of comments
+// Append a comment for the current revision to the list of comments
 function append_current_comment(id, div, viewer) {
-    const comment = comments[id];
-    let hdiv = "<textarea class='edit_comment' data-comment='" +
-        id + "' onkeyup='watch_area(event, this)'>" +
-        comment.desc + "</textarea>";
-    hdiv += "<a class='goto_line' onclick='ace.edit(\"" +
-        viewer.container.id + "\").gotoLine(" +
-        (comment.range.start.row+1) + ", " +
-        comment.range.start.column +
-        ", false)'>Goto l. " + (comment.range.start.row+1) +
-        "-" + (comment.range.end.row+1) + "</a>";
-    hdiv += " / <a class='goto_line' onclick='resize_comment(" +
-        id + ", ace.edit(\"" + viewer.container.id + "\"))'>Resize</a>";
-    $("div#" + div).append($("<div id='comment_" +
-                             comment.id + "' " +
-                             "class='current_comment'>").html(hdiv));
+    $("div#" + div).append(render_comment(id, viewer, { editable: true }));
 }
-
+// Append a comment for another revision to the list of comments
 function append_other_comment(id, div, viewer) {
-    const comment = comments[id];
-    const handler = "load_file_and_revisions(\"" +
-          comment.file + "\",\"" + comment.sha + "\"," +
-          "ace.edit(\"" + viewer.container.id + "\"));"
-    const hdiv = "<div>" + comment.desc + "</div>" +
-          " (<a class='goto_line' onClick='" + handler + "'>rev. " +
-          comment.sha.substring(0,6) + "</a>" + " / " +
-          "<a class='goto_line' onClick='open_diff_view(ace.edit(\"" +
-          viewer.container.id + "\"),\"" +
-          comment.file + "\", \"" + comment.id + "\")'>Bump</a>) ";
-    $("#" + div).append($("<div id='comment_" +
-                          comment.id + "' " +
-                          "class='other_comment'>").html(hdiv));
+    $("div#" + div).append(render_comment(id, viewer,
+                                          { editable: false,
+                                            linkable: true,
+                                            bumpable: comments[id].visible }));
 }
-
-function append_diff_comment(id, div, base_viewer, side_viewer) {
-    const comment = comments[id];
-    let hdiv = "<textarea class='edit_comment' data-comment='" +
-        id + "'>" + comment.desc + "</textarea>";
-    hdiv += "<a class='goto_line' onclick='ace.edit(\"" +
-        side_viewer.container.id + "\").gotoLine(" +
-        (comment.range.start.row+1) + ", " +
-        comment.range.start.column +
-        ", false)'>Goto l. " + (comment.range.start.row+1) +
-        "-" + (comment.range.end.row+1) + "</a>";
-    hdiv += " / <a class='goto_line' " +
-        "onclick='append_diff_new_comment(" + id +
-        ", ace.edit(\"" + base_viewer.container.id + "\"))'>Select</a>";
-    $("div#" + div).append($("<div id='comment_" +
-                             comment.id + "' " +
-                             "class='current_comment'>").html(hdiv));
+// Append a comment that can be bumped to the list of comments
+function append_diff_old_comment(id, div, base_viewer, side_viewer) {
+    $("div#" + div).append(render_comment(id, side_viewer,
+                                          { editable: false,
+                                            selectable: base_viewer.container.id }));
 }
-
+// Append a comment that has been bumped to the list of comments, as
+// well as saving it as a new comment on the server.
 function append_diff_new_comment(id, viewer) {
     const range = viewer.getSelectionRange();
     if (!range.isEmpty()) {
@@ -260,31 +322,21 @@ function append_diff_new_comment(id, viewer) {
                 '&sha=' + $("#revision").val() +
                 '&file=' + $("#filename").val() +
                 '&range=' + JSON.stringify(range) +
-                '&description=' + comments[id].desc +
+                '&description=' + comments[id].description +
                 '&type=' + comments[id].ctype})
             .done(function(comment) {
-                add_to_comments(comment);
+                register_comment(comment);
                 highlight_range(comment.id, viewer);
                 create_overlay(comment.id, viewer);
-                let hdiv = "<textarea class='edit_comment'" +
-                    " data-comment='" + comment.id + "'" +
-                    " onkeyup='watch_area(event, this)'>" +
-                    comments[comment.id].desc + "</textarea>";
-                hdiv += "<a class='goto_line' onclick='ace.edit(\"" +
-                    viewer.container.id + "\").gotoLine(" +
-                    (comment.range.start.row+1) + ", " +
-                    comment.range.start.column +
-                    ", false)'>Goto l. " + (comment.range.start.row+1) +
-                    "-" + (comment.range.end.row+1) + "</a>";
-                $("div#new_side_comment_div").append(
-                    $("<div id='comment_" + comment.id +
-                      "' class='current_comment'>").html(hdiv));
+                $("div#new_side_comment_div").append(render_comment(id, base_viewer,
+                                          { editable: true }));
                 $("#comment_" + comment["id"] + " textarea").select();
             });
     }
 }
 
-function add_to_comments(comment) {
+// Save the comment in the `comments` database.
+function register_comment(comment) {
     const range = new Range(comment.range.start.row,
                             comment.range.start.column,
                             comment.range.end.row,
@@ -294,7 +346,8 @@ function add_to_comments(comment) {
                              file: comment.file,
                              range: range,
                              ctype: comment.ctype,
-                             desc: comment.description };
+                             visible: comment.visible,
+                             description: comment.description };
 }
 
 // Create a new comment connected to a viewer. The comment is a hash
@@ -311,7 +364,7 @@ function add_to_comments(comment) {
 // does *not* create the comment on the server, and does *not* check
 // if the comment already exists (in this case it purely overwrites it).
 function create_new_comment(comment, viewer) {
-    add_to_comments(comment);
+    register_comment(comment);
     if (comment.sha == $("#revision").val()) { // Current revision
         append_current_comment(comment.id, "current_comments_div", viewer);
         highlight_range(comment.id, viewer);
@@ -371,7 +424,7 @@ function save_comment_description(comment_id, text) {
         .done(() => {
             const overlay  = $("#overlay_" + comment_id + " textarea");
             const textarea = $("#comment_" + comment_id + " textarea");
-            comments[comment_id].desc = text;
+            comments[comment_id].description = text;
             overlay.val(text);
             overlay.effect("highlight", {color:"#fff"});
             textarea.html(text);
@@ -404,7 +457,6 @@ function load_comments(filename, sha, viewer) {
             '?id=' + $("#repository_id").val() +
             '&file=' + filename })
         .done(function(data) {
-            $("#current_comments").empty();
             data.forEach((c) => create_new_comment(c, viewer));
         });
 }
@@ -454,7 +506,7 @@ function create_overlay(id, viewer) {
       viewer.container.id + "'))\">&#10060;</a></div>" +
       '<textarea class="edit_comment" data-comment="' + id +
       '" onkeyup="watch_area(event, this)">' +
-      comment.desc + '</textarea>' + '</div>').
+      comment.description + '</textarea>' + '</div>').
         appendTo('#overlays');
 
     scroll_overlay(id, viewer);

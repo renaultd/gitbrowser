@@ -5,11 +5,13 @@
       <div class="repository_name">
         <%= @repository.address %>
         <br/>
-        <a href="<%= edit_repository_path(@repository) %>">Edit</a>
-        /
-        <a href="<%= repositories_path %>">Home</a>
+        <a href="#" id="empty_file">Home</a>
         /
         <a href="#" id="head_revision">Head</a>
+        /
+        <a href="<%= edit_repository_path(@repository) %>">Edit</a>
+        /
+        <a href="<%= repositories_path %>">Repositories</a>
       </div>
       <input type="hidden" id="repository_id"
              value="<%= @repository.id %>"/>
@@ -37,6 +39,10 @@
       <ul id="file_tree">
       </ul>
     </div>
+  </div>
+
+  <div id="home">
+    <div id="all_comments_div"></div>
   </div>
 
   <div id="viewer">
@@ -89,6 +95,7 @@
   <% end %>
 
   $("#head_revision").click(() => load_head_revision(base_viewer));
+  $("#empty_file").click(() => load_empty_file(base_viewer));
   $("#warning_button").click(save_new_comment("warning", base_viewer));
   $("#error_button").click(save_new_comment("error", base_viewer));
   $("#closediff_button").click(() => close_diff_view(base_viewer));

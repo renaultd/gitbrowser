@@ -110,9 +110,12 @@ class RepositoriesController < ApplicationController
   end
 
   def fetch_comments
-    file = params[:file]
-    @comments = Comment.where(repository_id: @repository.id,
-                              file: file)
+    if params[:file]
+      @comments = Comment.where(repository_id: @repository.id,
+                                file: params[:file])
+    else
+      @comments = Comment.where(repository_id: @repository.id)
+    end
     respond_to do |format|
       format.js { render :json => @comments }
     end
