@@ -129,7 +129,7 @@ class RepositoriesController < ApplicationController
 
   def repository_params
     params.require(:repository).
-      permit(:address, :filter)
+      permit(:address, :name, :filter)
   end
 
 end

@@ -106,10 +106,18 @@ div.destroy_button {
     z-index: 99;
     font-size: xx-small;
 }
-div.repository_name {
+div.header {
     background: rgba(150,200,255,1.0);
     font-family: sans;
     font-size: smaller;
+}
+div.repository_name {
+    display: block;
+    text-align: center;
+    height: 30px;
+    line-height: 30px;
+    font-size: larger;
+    font-weight: bold;
 }
 textarea.edit_comment {
     display: block;

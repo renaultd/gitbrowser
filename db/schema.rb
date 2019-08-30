@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20190827165907) do
+ActiveRecord::Schema.define(version: 20190830153515) do
 
   create_table "comments", force: :cascade do |t|
     t.integer "repository_id", null: false
@@ -26,6 +26,7 @@ ActiveRecord::Schema.define(version: 20190827165907) do
   create_table "repositories", force: :cascade do |t|
     t.string "address"
     t.string "filter"
+    t.string "name"
   end
 
 end
