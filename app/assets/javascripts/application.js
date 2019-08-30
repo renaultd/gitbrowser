@@ -8,17 +8,13 @@
 // Global Range object defined in Ace.js
 const Range = require("ace/range").Range;
 
-// Returns the first revision on the revision_selector
-function get_first_revision() {
-    return $("#revision_selector option:first").val();
-}
-
-// Hook called when selecting the revision `sha`, calling the server
-// for a list of file and filling the page with it. If `sha` is not
-// provided, it is searched into $('#revision_selector').val().
-// Otherwise, this function is the callback for this selector.
+// Function updating the list of files. It's called when selecting the
+// revision `sha`, calling the server for a list of file and filling
+// the page with it. If `sha` is not provided, it is searched into
+// $('#revision_selector').val().  Otherwise, this function is the
+// callback for this selector.
 function fetch_file_list(viewer, sha) {
-    var real_sha;
+    let real_sha;
     if (sha) {
         real_sha = sha;
         $('#revision_selector').val(sha);
@@ -102,7 +98,7 @@ function load_file_and_revisions(filename, sha, viewer) {
 }
 
 function load_head_revision(viewer) {
-    fetch_file_list(viewer, get_first_revision());
+    fetch_file_list(viewer, $("#revision_selector option:first").val());
 }
 
 // Given a list of files retrieved with `fetch_file_list`, populate a
@@ -203,7 +199,7 @@ function unhighlight_range(id, viewer) {
 // Append a comment line to the list of comments
 function append_current_comment(id, div, viewer) {
     const comment = comments[id];
-    var hdiv = "<textarea class='edit_comment' data-comment='" +
+    let hdiv = "<textarea class='edit_comment' data-comment='" +
         id + "' onkeyup='watch_area(event, this)'>" +
         comment.desc + "</textarea>";
     hdiv += "<a class='goto_line' onclick='ace.edit(\"" +
@@ -237,7 +233,7 @@ function append_other_comment(id, div, viewer) {
 
 function append_diff_comment(id, div, base_viewer, side_viewer) {
     const comment = comments[id];
-    var hdiv = "<textarea class='edit_comment' data-comment='" +
+    let hdiv = "<textarea class='edit_comment' data-comment='" +
         id + "'>" + comment.desc + "</textarea>";
     hdiv += "<a class='goto_line' onclick='ace.edit(\"" +
         side_viewer.container.id + "\").gotoLine(" +
@@ -270,7 +266,7 @@ function append_diff_new_comment(id, viewer) {
                 add_to_comments(comment);
                 highlight_range(comment.id, viewer);
                 create_overlay(comment.id, viewer);
-                var hdiv = "<textarea class='edit_comment'" +
+                let hdiv = "<textarea class='edit_comment'" +
                     " data-comment='" + comment.id + "'" +
                     " onkeyup='watch_area(event, this)'>" +
                     comments[comment.id].desc + "</textarea>";
@@ -446,9 +442,9 @@ function watch_area(event, elem) {
 // highlighted comment.
 function create_overlay(id, viewer) {
     const comment = comments[id];
-    var session = viewer.getSession();
-    var document = session.getDocument();
-    var anchor = document.createAnchor(comment.range.start.row, 0);
+    const session = viewer.getSession();
+    const document = session.getDocument();
+    const anchor = document.createAnchor(comment.range.start.row, 0);
     comment.anchor = anchor;
 
     $('<div id="overlay_' + id + '" class="viewer_overlay viewer_overlay_' +
