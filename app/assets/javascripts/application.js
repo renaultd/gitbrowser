@@ -39,22 +39,25 @@ function fetch_file_list(viewer, sha) {
 //
 // Concretely, removes the highlighting, the anchor (if any) and the
 // overlay associated to a comment. It does *not* remove the comment
-// from the server.
-function clear_comment(id, viewer) {
+// from the server. The comments are removed from the `comments`
+// local database if `delete_after`.
+function clear_comment(id, viewer, delete_after) {
     const comment = comments[id];
     if (comment.marker_id) {
         unhighlight_range(id, viewer);
-        if (comment.anchor)
-            comment.anchor.detach();
+    }
+    if (comment.anchor) {
+        comment.anchor.detach();
         $("#overlay_" + id).remove();
         viewer.session.removeListener("changeScrollTop", comment.callb);
     }
     $("#comment_" + id).remove();
-    delete comments[id];
+    if (delete_after)
+        delete comments[id];
 }
 
-function clear_comments(viewer) {
-    Object.keys(comments).forEach((c) => clear_comment(c, viewer));
+function clear_comments(viewer, delete_after) {
+    Object.keys(comments).forEach((c) => clear_comment(c, viewer, delete_after));
     $("#current_comments_div").empty();
     $("#other_comments_div").empty();
 }
@@ -94,7 +97,7 @@ function load_file(filename, sha, viewer, comments) {
                 html(filename + " @ " + sha.substring(0,6));
             init_viewer(viewer, data);
             if (comments) {
-                clear_comments(viewer);
+                clear_comments(viewer, true);
                 load_comments(filename, sha, viewer);
                 $("#overlays").css("visibility", "visible");
             }
@@ -115,7 +118,7 @@ function load_empty_file(viewer) {
     $("#viewer").css("visibility", "collapse");
     $("#overlays").css("visibility", "collapse");
     $("#all_comments_div").empty();
-    clear_comments(viewer);
+    clear_comments(viewer, true);
     $.ajax({
         dataType: 'json',
         url: 'fetch_comments' +
@@ -267,12 +270,9 @@ function close_diff_view(viewer) {
     ace.edit("side_viewer_div").destroy();
     viewer.resize();
     const current_sha = $("#revision").val();
+    clear_comments(viewer, false);
     Object.keys(comments).forEach((c) => {
-        if (comments[c].sha == current_sha) {
-            unhighlight_range(c, viewer);
-            highlight_range(c, viewer);
-        }
-        scroll_overlay(c, viewer);
+        create_new_comment(comments[c], viewer);
     });
 }
 
@@ -326,11 +326,13 @@ function append_diff_new_comment(id, viewer) {
                 '&description=' + comments[id].description +
                 '&type=' + comments[id].ctype})
             .done(function(comment) {
+                comments[id].visible = false;
                 register_comment(comment);
                 highlight_range(comment.id, viewer);
                 create_overlay(comment.id, viewer);
-                $("div#new_side_comment_div").append(render_comment(id, base_viewer,
-                                          { editable: true }));
+                $("div#new_side_comment_div").append(
+                    render_comment(comment.id, base_viewer,
+                                   { editable: true }));
                 $("#comment_" + comment["id"] + " textarea").select();
             });
     }
@@ -441,7 +443,7 @@ function destroy_comment(comment_id, viewer) {
             '?id=' + $("#repository_id").val() +
             '&comment_id=' + comment_id })
         .done(function () {
-            clear_comment(comment_id, viewer);
+            clear_comment(comment_id, viewer, true);
             if ($("#current_comments a").length +
                   $("#other_comments a").length == 0)
                 $("a[data-file='" + $("#filename").val() + "']").
