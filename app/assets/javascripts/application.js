@@ -153,11 +153,11 @@ function render_comment(id, viewer, options) {
     let hdiv;
     if (options.editable)
         hdiv = "<textarea class='edit_comment' data-comment='" +
-        id + "' onkeyup='watch_area(event, this)'>" +
+        comment.id + "' onkeyup='watch_area(event, this)'>" +
         comment.description + "</textarea>";
     else {
         hdiv = "<div class='show_comment' data-comment='" +
-            id + "'>"
+            comment.id + "'>"
         if (options.detailed)
             hdiv += comment.file + " (" +
             comment.sha.substring(0,6) + ") : ";
