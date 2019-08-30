@@ -17,6 +17,9 @@
 a.commented_file {
     color: rgba(155,0,0,1);
 }
+a.directory {
+    color: rgba(155,155,155,1);
+}
 a.goto_line {
     color: rgba(0,50,200,1);
 }
@@ -91,6 +94,9 @@ div.disabled_comment {
     color: gray;
     margin: 3px;
     padding: 5px;
+}
+div.disabled_comment a {
+    color: rgba(100,100,170,1.0);
 }
 div.other_comment {
     background-color:rgba(200,200,215,1.0);

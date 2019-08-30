@@ -208,7 +208,7 @@ function load_files(data, viewer) {
             const domel = (level == "") ? $("#file_tree") :
                   $("ul[data-file='" + level + "']");
             if(data[el].is_dir) {
-                domel.append($('<li>').text(txtel))
+                domel.append($('<li>').html("<a class='directory'>" + txtel + "</a>"))
                     .append($('<ul data-file="' + el + '">'));
                 fill_level(el);
             } else {
