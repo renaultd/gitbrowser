@@ -114,6 +114,7 @@ function load_empty_file(viewer) {
     $("#home").css("visibility", "visible");
     $("#viewer").css("visibility", "collapse");
     $("#overlays").css("visibility", "collapse");
+    $("#all_comments_div").empty();
     clear_comments(viewer);
     $.ajax({
         dataType: 'json',
