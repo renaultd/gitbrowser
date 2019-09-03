@@ -30,7 +30,7 @@ class Repository < ApplicationRecord
   def file(file, sha)
     rugged  = self.rugged
     blob_id = rugged.lookup(sha).tree.path(file)[:oid]
-    return rugged.lookup(blob_id).content()
+    return rugged.lookup(blob_id).content().force_encoding("UTF-8")
   end
 
   # Return the Rugged equivalent of the repository. Moreover these
