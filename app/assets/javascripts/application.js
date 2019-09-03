@@ -60,6 +60,8 @@ function clear_comments(viewer, delete_after) {
     Object.keys(comments).forEach((c) => clear_comment(c, viewer, delete_after));
     $("#current_comments_div").empty();
     $("#other_comments_div").empty();
+    $("#ancient_comments_div").empty();
+    $(".comments_head").css("visibility", "collapse");
 }
 
 // Load an Ace viewer with `data` as its contents.
@@ -124,7 +126,9 @@ function load_empty_file(viewer) {
         url: 'fetch_comments' +
             '?id=' + $("#repository_id").val() })
         .done(function(data) {
-            data.forEach((c) => {
+            data.sort((c1,c2) =>
+                      c1.visible ? (c2.visible ? (c1.id - c2.id) : -1) : 1).
+                forEach((c) => {
                 $("#all_comments_div").
                     append($('<div>').html(
                         render_comment(c, viewer, {
@@ -373,7 +377,10 @@ function create_new_comment(comment, viewer) {
         highlight_range(comment.id, viewer);
         create_overlay(comment.id, viewer);
     } else { // Comment for an older revision
-        append_other_comment(comment.id, "other_comments_div", viewer);
+        if (comment.visible)
+            append_other_comment(comment.id, "other_comments_div", viewer);
+        else
+            append_other_comment(comment.id, "ancient_comments_div", viewer);
     }
     $("a[data-file='" + comment.file + "']").addClass("commented_file");
 }
@@ -461,6 +468,11 @@ function load_comments(filename, sha, viewer) {
             '&file=' + filename })
         .done(function(data) {
             data.forEach((c) => create_new_comment(c, viewer));
+            ["current_comments", "other_comments", "ancient_comments"].
+                forEach((c) => {
+                    if ($("#" + c + "_div").children().length > 0)
+                        $("#" + c + "_hd").css("visibility", "visible");
+                });
         });
 }
 

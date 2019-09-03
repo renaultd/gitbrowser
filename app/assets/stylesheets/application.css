@@ -135,3 +135,8 @@ textarea.edit_comment {
 div.show_comment {
     font-family: sans;
 }
+div.comments_head {
+    margin: 3px;
+    text-align: center;
+    font-family: sans;
+}
