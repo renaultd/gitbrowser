@@ -3,24 +3,22 @@ class Repository < ApplicationRecord
   validates :filter, presence: true
   has_many :comments
 
-  def git_dir
-    return File.join(self.address, ".git")
-  end
-
+  # Return the list of revisions of a repository.
   def revisions
-    git_cmd = "git --git-dir #{self.git_dir} log " +
-              "--pretty='format:%H,%an,%ad' --date=short --max-count=100 HEAD"
-    revs = `#{git_cmd}`.lines.collect { |l|
-      arr = l.strip.split(",")
-      { sha: arr[0], author: arr[1], date: arr[2] }
-    }
+    rugged = self.rugged
+    walker = Rugged::Walker.new(rugged)
+    walker.push(rugged.head.target)
+    revs = walker.entries.collect { |el|
+      { sha: el.oid, author: el.author[:name],
+        date: el.time.strftime("%Y-%m-%d %H:%M") } }
     return revs
   end
 
+  # Return the list of files in the repository at a given revision,
+  # and matching the filters associated to the repository.
   def files(sha)
-    git_cmd = "git --git-dir #{self.git_dir} " +
-              "ls-tree -r --name-only #{sha}"
-    files = `#{git_cmd}`.lines.collect(&:strip)
+    files = self.rugged.lookup(sha).tree.walk(:postorder).to_a.
+              collect { |el| el[0] + el[1][:name] }
     regexp = Regexp.new(self.filter.
                          gsub(".", "\\.").
                          gsub("*", ".*").
@@ -28,9 +26,28 @@ class Repository < ApplicationRecord
     return files.select { |f| regexp.match(f) }
   end
 
+  # Return the contents of a file at a given revision.
   def file(file, sha)
-    git_cmd = "git --git-dir #{self.git_dir} show #{sha}:#{file}"
-    return `#{git_cmd}`
+    rugged  = self.rugged
+    blob_id = rugged.lookup(sha).tree.path(file)[:oid]
+    return rugged.lookup(blob_id).content()
   end
+
+  # Return the Rugged equivalent of the repository. Moreover these
+  # objects are cached and therefore not recreated each time. The
+  # Rugged repository then accesses its information via libgit2.
+  def rugged
+    if @@repositories.key?(self.id)
+      @@repositories[self.id]
+    else
+      r = Rugged::Repository.new(self.address)
+      @@repositories[self.id] = r
+      r
+    end
+  end
+
+  private
+  # Cache the repositories objects for rugged
+  @@repositories = {}
 
 end
