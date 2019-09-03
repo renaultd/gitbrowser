@@ -185,7 +185,7 @@ function render_comment(id, viewer, options) {
             id + ", ace.edit(\"" + viewer.container.id + "\"))'>Resize</a>";
     }
     if (options.bumpable) {
-        hdiv += " / <a class='goto_line' onClick='open_diff_view(ace.edit(\"" +
+        hdiv += " / <a class='goto_line' onClick='bump_comment(ace.edit(\"" +
             viewer.container.id + "\"),\"" +
             comment.file + "\", " + comment.id + ")'>Bump</a>";
     }
@@ -232,6 +232,27 @@ function load_files(data, viewer) {
                             load_file($(event.target).data("file"),
                                       $("#revision").val(),
                                       viewer, true));
+}
+
+// Attempt to call the server to try to automatically bump the commit,
+// and if impossible, open a special "diff" view to bump it by hand.
+function bump_comment(viewer, filename, id) {
+    $.ajax({
+        dataType: 'json',
+        url: 'bump_comment' +
+            '?id=' + $("#repository_id").val() +
+            '&comment_id=' + id +
+            '&sha=' + $("#revision").val() })
+        .done(function(data) {
+            if (data.success) {
+                create_new_comment(data.comment, viewer);
+                comments[id].visible = false;
+                clear_comment(id, viewer, false);
+                create_new_comment(comments[id], viewer);
+            } else {
+                open_diff_view(viewer, filename, id);
+            }
+        });
 }
 
 // Displays the second viewer to have a diff between the two
@@ -471,7 +492,7 @@ function load_comments(filename, sha, viewer) {
             ["current_comments", "other_comments", "ancient_comments"].
                 forEach((c) => {
                     if ($("#" + c + "_div").children().length > 0)
-                        $("#" + c + "_hd").css("display", "inline");
+                        $("#" + c + "_hd").css("display", "");
                 });
         });
 }

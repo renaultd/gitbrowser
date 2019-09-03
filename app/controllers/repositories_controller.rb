@@ -97,6 +97,27 @@ class RepositoriesController < ApplicationController
     @comment.destroy
   end
 
+  def bump_comment
+    @comment = Comment.find(params[:comment_id])
+    @sha     = params[:sha]
+    # Very stupid analysis to check if the blobs are the same
+    rugged   = @repository.rugged
+    file     = @comment.file
+    ref_c    = rugged.lookup(@comment.sha).tree.path(file)[:oid]
+    ref_h    = rugged.lookup(@sha).tree.path(file)[:oid]
+    if (ref_c != ref_h)
+      render :json => { success: false }
+    else
+      @new_comment = @comment.bump(@sha)
+      if (@new_comment.save)
+        @comment.update_attributes(visible: false)
+        render :json => { success: true, comment: @new_comment }
+      else
+        render :json => { success: false }
+      end
+    end
+  end
+
   def save_comment_description
     @comment = Comment.find(params[:comment_id])
     @comment.description = params[:description]
