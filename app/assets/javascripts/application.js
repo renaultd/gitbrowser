@@ -61,7 +61,7 @@ function clear_comments(viewer, delete_after) {
     $("#current_comments_div").empty();
     $("#other_comments_div").empty();
     $("#ancient_comments_div").empty();
-    $(".comments_head").css("visibility", "collapse");
+    $(".comments_head").css("display", "none");
 }
 
 // Load an Ace viewer with `data` as its contents.
@@ -93,15 +93,15 @@ function load_file(filename, sha, viewer, comments) {
             "&file=" + filename })
         .done(function(data) {
             $("#filename").val(filename);
-            $("#home").css("visibility", "collapse");
-            $("#viewer").css("visibility", "visible");
+            $("#home").css("display", "none");
+            $("#viewer").css("display", "inline");
             $(viewer.container).siblings(".viewer_header").
                 html(filename + " @ " + sha.substring(0,6));
             init_viewer(viewer, data);
             if (comments) {
                 clear_comments(viewer, true);
                 load_comments(filename, sha, viewer);
-                $("#overlays").css("visibility", "visible");
+                $("#overlays").css("display", "inline");
             }
         });
 }
@@ -116,9 +116,9 @@ function load_head_revision(viewer) {
 }
 
 function load_empty_file(viewer) {
-    $("#home").css("visibility", "visible");
-    $("#viewer").css("visibility", "collapse");
-    $("#overlays").css("visibility", "collapse");
+    $("#home").css("display", "inline");
+    $("#viewer").css("display", "none");
+    $("#overlays").css("display", "none");
     $("#all_comments_div").empty();
     clear_comments(viewer, true);
     $.ajax({
@@ -240,11 +240,11 @@ function load_files(data, viewer) {
 // files. The existing viewer is passed as a parameter so it can be
 // resized.
 function open_diff_view(viewer, filename, id) {
-    $("#revisions").css("visibility", "collapse");
-    $("#overlays").css("visibility", "collapse");
-    $("#comments").css("visibility", "collapse");
-    $("#side_viewer").css("visibility", "visible");
-    $("#side_comments").css("visibility", "visible");
+    $("#revisions").css("display", "none");
+    $("#overlays").css("display", "none");
+    $("#comments").css("display", "none");
+    $("#side_viewer").css("display", "inline");
+    $("#side_comments").css("display", "inline");
     $("#old_side_comment_div").empty();
     $("#new_side_comment_div").empty();
     const side_viewer = ace.edit("side_viewer_div");
@@ -266,11 +266,11 @@ function open_diff_view(viewer, filename, id) {
 // Close the diff view. The remaining viewer is passed as a parameter
 // so it can be resized.
 function close_diff_view(viewer) {
-    $("#revisions").css("visibility", "visible");
-    $("#overlays").css("visibility", "visible");
-    $("#comments").css("visibility", "visible");
-    $("#side_viewer").css("visibility", "collapse");
-    $("#side_comments").css("visibility", "collapse");
+    $("#revisions").css("display", "inline");
+    $("#overlays").css("display", "inline");
+    $("#comments").css("display", "inline");
+    $("#side_viewer").css("display", "none");
+    $("#side_comments").css("display", "none");
     ace.edit("side_viewer_div").destroy();
     viewer.resize();
     const current_sha = $("#revision").val();
@@ -471,7 +471,7 @@ function load_comments(filename, sha, viewer) {
             ["current_comments", "other_comments", "ancient_comments"].
                 forEach((c) => {
                     if ($("#" + c + "_div").children().length > 0)
-                        $("#" + c + "_hd").css("visibility", "visible");
+                        $("#" + c + "_hd").css("display", "inline");
                 });
         });
 }
@@ -491,7 +491,7 @@ function scroll_overlay(id, viewer){
     if (position.pageY >= 900)
         div.style.display = "none";
     else {
-        div.style.display = "";
+        div.style.display = "inline";
         div.style.top = position.pageY + 'px';
     }
 }

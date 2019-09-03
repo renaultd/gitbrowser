@@ -62,7 +62,7 @@ div#viewer, div#side_viewer, div#home {
     flex: 2.5 1 0;
 }
 div#side_viewer, div#side_comments {
-    visibility: collapse;
+    display: none;
 }
 div#comments, div#revisions, div#side_comments {
     flex: 1 1 0;
