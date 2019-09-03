@@ -47,9 +47,7 @@ function clear_comment(id, viewer, delete_after) {
         unhighlight_range(id, viewer);
     }
     if (comment.anchor) {
-        comment.anchor.detach();
-        $("#overlay_" + id).remove();
-        viewer.session.removeListener("changeScrollTop", comment.callb);
+        destroy_overlay(id, viewer);
     }
     $("#comment_" + id).remove();
     if (delete_after)
@@ -418,8 +416,10 @@ function resize_comment(id, viewer) {
                 .done(function(data) {
                     const comment = comments[id];
                     unhighlight_range(id, viewer);
+                    destroy_overlay(id, viewer);
                     comments[id].range = range;
                     highlight_range(id, viewer);
+                    create_overlay(id, viewer);
                 });
 }
 
@@ -488,7 +488,7 @@ function scroll_overlay(id, viewer){
           300; // pageX starts after the gutter, 300 is the width of the overlay
     const div = $("#overlay_" + id)[0];
     div.style.left = offset + 'px';
-    if (position.pageY >= 900)
+    if ((position.pageY >= $(viewer.container).height()) || (position.pageY <= 0))
         div.style.display = "none";
     else {
         div.style.display = "inline";
@@ -528,6 +528,13 @@ function create_overlay(id, viewer) {
     const callb = (scrollTop) => scroll_overlay(id, viewer)
     session.on("changeScrollTop", callb);
     comment.callb = callb;
+}
+
+// Remove an overlay and its callback from the view
+function destroy_overlay(id, viewer) {
+    comments[id].anchor.detach();
+    $("#overlay_" + id).remove();
+    viewer.session.removeListener("changeScrollTop", comments[id].callb);
 }
 
 // Toggle the visibility of the overlays.
