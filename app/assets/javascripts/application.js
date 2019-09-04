@@ -3,6 +3,7 @@
 //= require ace-rails-ap
 //= require ace/theme-chrome
 //= require jquery-ui
+//= require jstree
 //= require_tree .
 
 // Global Range object defined in Ace.js
@@ -29,6 +30,13 @@ function fetch_file_list(viewer, sha) {
         .done(function(data) {
             $("#revision").val(real_sha);
             load_files(data, viewer);
+            $("#tree").jstree({
+                "core" : {
+                    "multiple" : false,
+                    "animation" : 0
+                }
+            });
+            $("#tree").jstree().open_all();
             const file = $("#filename").val();
             if (file) { load_file(file, real_sha, viewer, true); }
             else { load_empty_file(viewer); }
@@ -214,8 +222,9 @@ function load_files(data, viewer) {
             const domel = (level == "") ? $("#file_tree") :
                   $("ul[data-file='" + level + "']");
             if(data[el].is_dir) {
-                domel.append($('<li>').html("<a class='directory'>" + txtel + "</a>"))
-                    .append($('<ul data-file="' + el + '">'));
+                domel.append($('<li>').
+                             html("<a class='directory'>" + txtel + "</a>").
+                             append($('<ul data-file="' + el + '">')));
                 fill_level(el);
             } else {
                 const tel = data[el].has_comm ? "<a data-file='" + el +

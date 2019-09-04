@@ -17,6 +17,8 @@ gem 'jquery-rails'
 gem 'jquery-ui-rails'
 # Ace code editor
 gem 'ace-rails-ap'
+# JsTree for files
+gem 'jstree-rails-4'
 
 gem 'listen'
 
