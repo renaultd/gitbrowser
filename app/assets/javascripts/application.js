@@ -37,6 +37,10 @@ function fetch_file_list(viewer, sha) {
                 }
             });
             $("#tree").jstree().open_all();
+	    $('#tree').on("select_node.jstree", function (e, data) {
+		load_file(data.node.a_attr["data-file"],
+			  $("#revision").val(),
+			  viewer, true); });
             const file = $("#filename").val();
             if (file) { load_file(file, real_sha, viewer, true); }
             else { load_empty_file(viewer); }
@@ -237,10 +241,6 @@ function load_files(data, viewer) {
     }
 
     fill_level("");
-    $("#file_tree a").click((event) =>
-                            load_file($(event.target).data("file"),
-                                      $("#revision").val(),
-                                      viewer, true));
 }
 
 // Attempt to call the server to try to automatically bump the commit,
