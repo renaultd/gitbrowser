@@ -10,16 +10,17 @@
  * files in this directory. Styles in this file should be added after the last require_* statement.
  * It is generally better to create a new file per style scope.
  *
- *= require jstree-default
- *= require_tree .
- *= require_self
  */
 
+@import "bootstrap-sprockets";
+@import "bootstrap";
+@import "jstree-default";
+
 a.commented_file {
-    color: rgba(155,0,0,1);
+    color: rgba(155,0,0,1) !important;
 }
 a.directory {
-    color: rgba(155,155,155,1);
+    color: rgba(155,155,155,1) !important;
 }
 a.goto_line {
     color: rgba(0,50,200,1);
