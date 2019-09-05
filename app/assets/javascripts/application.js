@@ -34,13 +34,18 @@ function fetch_file_list(viewer, sha) {
                 "core" : {
                     "multiple" : false,
                     "animation" : 0
-                }
+                },
+                "types" : {
+                    "folder"         : { "icon" : "jstree-folder directory" },
+                    "normal-file"    : { "icon" : "jstree-file" },
+                    "commented-file" : { "icon" : "jstree-file commented_file" },
+                },"plugins" : [ "types" ]
             });
             $("#tree").jstree().open_all();
-	    $('#tree').on("select_node.jstree", function (e, data) {
-		load_file(data.node.a_attr["data-file"],
-			  $("#revision").val(),
-			  viewer, true); });
+            $('#tree').on("select_node.jstree", function (e, data) {
+                load_file(data.node.a_attr["data-file"],
+                          $("#revision").val(),
+                          viewer, true); });
             const file = $("#filename").val();
             if (file) { load_file(file, real_sha, viewer, true); }
             else { load_empty_file(viewer); }
@@ -226,16 +231,15 @@ function load_files(data, viewer) {
             const domel = (level == "") ? $("#file_tree") :
                   $("ul[data-file='" + level + "']");
             if(data[el].is_dir) {
-                domel.append($('<li>').
+                domel.append($('<li data-jstree=\'{"type":"folder"}\'>').
                              html("<a class='directory'>" + txtel + "</a>").
                              append($('<ul data-file="' + el + '">')));
                 fill_level(el);
             } else {
-                const tel = data[el].has_comm ? "<a data-file='" + el +
-                      "' class='commented_file'>" +
-                      txtel + "</a>" : "<a data-file='" + el + "'>" +
-                      txtel + "</a>";
-                domel.append($('<li>').html(tel));
+                const typ = data[el].has_comm ? "commented-file" : "normal-file";
+                const tel = "<a data-file='" + el + "'>" + txtel + "</a>";
+                domel.append($('<li data-jstree=\'{"type":"' + typ +
+                               '"}\'>').html(tel));
             }
         });
     }
@@ -306,6 +310,7 @@ function close_diff_view(viewer) {
     Object.keys(comments).forEach((c) => {
         create_new_comment(comments[c], viewer);
     });
+    reload_comment_heads();
 }
 
 // Add a new highlighted section into the viewer.
@@ -488,6 +493,14 @@ function destroy_comment(comment_id, viewer) {
         });
 }
 
+function reload_comment_heads() {
+    ["current_comments", "other_comments", "ancient_comments"].
+        forEach((c) => {
+            if ($("#" + c + "_div").children().length > 0)
+                $("#" + c + "_hd").css("display", "");
+        });
+}
+
 // Load the comments for a given file from the server and display them
 // on the viewer (typically with `create_new_comment`)
 function load_comments(filename, sha, viewer) {
@@ -498,11 +511,7 @@ function load_comments(filename, sha, viewer) {
             '&file=' + filename })
         .done(function(data) {
             data.forEach((c) => create_new_comment(c, viewer));
-            ["current_comments", "other_comments", "ancient_comments"].
-                forEach((c) => {
-                    if ($("#" + c + "_div").children().length > 0)
-                        $("#" + c + "_hd").css("display", "");
-                });
+            reload_comment_heads();
         });
 }
 
