@@ -9,9 +9,13 @@ class Repository < ApplicationRecord
     walker = Rugged::Walker.new(rugged)
     walker.push(rugged.head.target)
     revs = walker.entries.collect { |el|
-      { sha: el.oid, author: el.author[:name],
+      lines = el.message.lines
+      desc = lines.empty? ? "" : lines.first.strip.gsub(/[\'\"]/, "")
+      { sha: el.oid, value: el.oid[0..6],
+        author: el.author[:name],
+        description: desc,
         date: el.time.strftime("%Y-%m-%d %H:%M") } }
-    return revs
+    return revs.drop(15).take(10)
   end
 
   # Return the list of files in the repository at a given revision,

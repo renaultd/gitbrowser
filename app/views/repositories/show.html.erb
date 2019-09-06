@@ -36,17 +36,18 @@
     </div>
 
     <div>
-      <select id="revision_selector" onChange="fetch_file_list(base_viewer)">
-        <% @revisions.each_with_index do |r| %>
-        <option value="<%= r[:sha] %>"
-                <% if r[:sha] == @selected_revision[:sha] %>
-                selected="selected"
-                <% end %>
-                >
-          <%= r[:sha][0..6] %> - <%= r[:date] %> - <%= r[:author] %>
-        </option>
-        <% end %>
-      </select>
+      <div class="row">
+        <div class="col-lg-12">
+          <div class="input-group" style="padding: 5px">
+            <input id="revision_selector" type="text"
+                   class="form-control" placeholder="Revisions...">
+            <span class="input-group-btn">
+              <button id="expand_revisions"
+                      class="btn btn-default" type="button">Go!</button>
+            </span>
+          </div><!-- /input-group -->
+        </div><!-- /.col-lg-12 -->
+      </div><!-- /.row -->
     </div>
 
     <div id="file_tree">
@@ -141,4 +142,28 @@
   $("#error_button").click(save_new_comment("error", base_viewer));
   $("#closediff_button").click(() => close_diff_view(base_viewer));
   $("#toggle_comments").click(toggle_comments);
+  $("#revision_selector").autocomplete({
+      minLength: 0,
+      source: JSON.parse('<%= @revisions.to_json.html_safe %>'),
+      position: { my : "left top", at: "left bottom" },
+      select: function( event, ui ) {
+          $( "#revision_selector" ).val( ui.item.label );
+      },
+      change: function( event, ui ) {
+          const res = event.target.value;
+          if (res.length >= 6) {
+              $("#revision").val(event.target.value);
+              fetch_file_list(base_viewer);
+          }
+      },
+  }).autocomplete( "instance" )._renderItem = function( ul, item ) {
+      return $( "<li>" )
+          .append( "<div><span class='ui-menu-sha'>" + item.sha.substring(0,6) +
+                   "</span> (" + item.date + ")<br>" +
+                   item.author + "&nbsp;: " + item.description + "</div>" )
+          .appendTo( ul );
+  };
+  $("#expand_revisions").click(() =>
+       $("#revision_selector").autocomplete("search", ""));
+
 </script>

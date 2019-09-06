@@ -3,7 +3,7 @@
 //= require bootstrap-sprockets
 //= require ace-rails-ap
 //= require ace/theme-chrome
-//= require jquery-ui
+//= require jquery-ui/widgets/autocomplete
 //= require jstree
 //= require_tree .
 
@@ -19,7 +19,7 @@ function fetch_file_list(viewer, sha) {
     let real_sha;
     if (sha) {
         real_sha = sha;
-        $('#revision_selector').val(sha);
+        $('#revision_selector').val(sha.substring(0,6));
     } else {
         real_sha = $('#revision_selector').val();
     }

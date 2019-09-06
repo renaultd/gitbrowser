@@ -14,6 +14,9 @@
 
 @import "bootstrap-sprockets";
 @import "bootstrap";
+@import "jquery-ui/core";
+@import "jquery-ui/theme";
+@import "jquery-ui/autocomplete";
 @import "jstree-default";
 
 li.normal_file {
@@ -139,4 +142,24 @@ div.comments_head {
     margin: 3px;
     text-align: center;
     font-family: sans;
+}
+.ui-menu {
+    list-style:none;
+    padding:2px;
+    margin:0px;
+    display:block;
+    float:left;
+}
+.ui-menu-item {
+    margin: 5px;
+}
+.ui-autocomplete {
+    max-height: 600px;
+    max-width: 400px;
+    overflow-y: auto;   /* prevent horizontal scrollbar */
+    overflow-x: hidden; /* add padding to account for vertical scrollbar */
+    z-index:1000 !important;
+}
+.ui-menu-sha {
+    font-weight: bold;
 }
