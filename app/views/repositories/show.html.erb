@@ -3,6 +3,9 @@
   <div id="revisions">
     <div>
       <div>
+        <div id="loader" style="background-color:red">
+          LOADING
+        </div>
         <div class="repository_name bg-primary">
           <%= @repository.name %>
         </div>
@@ -123,6 +126,12 @@
 </div>
 
 <script>
+  jQuery.ajaxSetup({
+      beforeSend: function() { $('#loader').show(); },
+      complete: function(){ $('#loader').hide(); },
+      success: function() {}
+  });
+
   var base_viewer = ace.edit("viewer_div");
   var comments = {}; // Dict to centralize the comments
   base_viewer.setReadOnly(true);
@@ -147,12 +156,10 @@
       source: JSON.parse('<%= @revisions.to_json.html_safe %>'),
       position: { my : "left top", at: "left bottom" },
       select: function( event, ui ) {
-          $( "#revision_selector" ).val( ui.item.label );
-      },
-      change: function( event, ui ) {
-          const res = event.target.value;
+          const res = ui.item.value;
           if (res.length >= 6) {
-              $("#revision").val(event.target.value);
+              $("#revision_selector").val(res);
+              $("#revision").val(res);
               fetch_file_list(base_viewer);
           }
       },

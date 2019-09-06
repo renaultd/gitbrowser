@@ -29,6 +29,7 @@ function fetch_file_list(viewer, sha) {
             '?id=' + $("#repository_id").val() +
             '&sha=' + real_sha })
         .done(function(data) {
+            console.log(data);
             $("#revision").val(real_sha);
             // load_files(data, viewer);
             $('#file_tree').jstree().settings.core.data = data;
