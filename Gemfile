@@ -13,7 +13,7 @@ gem 'rugged'
 # Use SCSS for stylesheets
 gem 'sass-rails', '~> 5.0'
 # Bootstrap
-gem 'bootstrap-sass', '~> 3.3.7'
+gem 'bootstrap-sass', '~> 3.4.1'
 # Rails
 gem 'jquery-rails'
 gem 'jquery-ui-rails'
