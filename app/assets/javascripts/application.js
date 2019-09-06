@@ -1,5 +1,6 @@
 //= require jquery2
 //= require jquery_ujs
+//= require bootstrap-sprockets
 //= require ace-rails-ap
 //= require ace/theme-chrome
 //= require jquery-ui
@@ -29,26 +30,13 @@ function fetch_file_list(viewer, sha) {
             '&sha=' + real_sha })
         .done(function(data) {
             $("#revision").val(real_sha);
-            load_files(data, viewer);
-            $("#tree").jstree({
-                "core" : {
-                    "multiple" : false,
-                    "animation" : 0
-                },
-                "types" : {
-                    "folder"         : { "icon" : "jstree-folder directory" },
-                    "normal-file"    : { "icon" : "jstree-file" },
-                    "commented-file" : { "icon" : "jstree-file commented_file" },
-                },"plugins" : [ "types" ]
-            });
-            $("#tree").jstree().open_all();
-            $('#tree').on("select_node.jstree", function (e, data) {
-                load_file(data.node.a_attr["data-file"],
-                          $("#revision").val(),
-                          viewer, true); });
+            // load_files(data, viewer);
+            $('#file_tree').jstree().settings.core.data = data;
+            $('#file_tree').jstree(true).deselect_all();
+            $("#file_tree").jstree(true).refresh();
             const file = $("#filename").val();
-            if (file) { load_file(file, real_sha, viewer, true); }
-            else { load_empty_file(viewer); }
+            if (file) { load_file(file, real_sha, viewer, true);
+            } else { load_empty_file(viewer); }
         });
 }
 
@@ -94,6 +82,30 @@ function init_viewer(viewer, data) {
     viewer.session.setMode(json["mode"]);
     viewer.clearSelection();
     viewer.navigateFileStart();
+}
+
+// Initialize the instance of the (JStree) file tree
+function init_file_tree(viewer) {
+  $("#file_tree").jstree({
+      "core" : {
+          "multiple" : false,
+          "animation" : 0
+      },
+      "data" : [],
+      "types" : {
+          "folder"         : { "icon" : "jstree-folder directory" },
+          "normal-file"    : { "icon" : "jstree-file" },
+          "commented-file" : { "icon" : "jstree-file commented_file",
+                               "style": {"backgroundColor": "green"} },
+      },"plugins" : [ "types" ]
+  });
+  $('#file_tree').on("refresh.jstree", function (e, data) {
+      $('#file_tree').jstree(true).open_all();
+  });
+  $('#file_tree').on("select_node.jstree", function (e, data) {
+      if (data.node.li_attr.class != "directory")
+          load_file(data.node.id, $("#revision").val(), viewer, true);
+  });
 }
 
 // Fetch a file's contents on the server with the possible comments,
@@ -215,36 +227,6 @@ function render_comment(id, viewer, options) {
         (options.bumpable ? "other_comment" : "visible_comment") : "disabled_comment";
     return $("<div id='comment_" + comment.id + "' " +
              "class='" + hclass + "'>").html(hdiv);
-}
-
-// Given a list of files retrieved with `fetch_file_list`, populate a
-// tree of the files in the viewer.
-function load_files(data, viewer) {
-    $("#file_tree").empty();
-    const revision = $("#revision_selector").val();
-    const keys = Object.keys(data);
-
-    function fill_level(level) {
-        const els = keys.filter((el) => data[el].parent == level);
-        els.forEach(function (el) {
-            const txtel = data[el].name;
-            const domel = (level == "") ? $("#file_tree") :
-                  $("ul[data-file='" + level + "']");
-            if(data[el].is_dir) {
-                domel.append($('<li data-jstree=\'{"type":"folder"}\'>').
-                             html("<a class='directory'>" + txtel + "</a>").
-                             append($('<ul data-file="' + el + '">')));
-                fill_level(el);
-            } else {
-                const typ = data[el].has_comm ? "commented-file" : "normal-file";
-                const tel = "<a data-file='" + el + "'>" + txtel + "</a>";
-                domel.append($('<li data-jstree=\'{"type":"' + typ +
-                               '"}\'>').html(tel));
-            }
-        });
-    }
-
-    fill_level("");
 }
 
 // Attempt to call the server to try to automatically bump the commit,

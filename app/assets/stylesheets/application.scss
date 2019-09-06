@@ -16,10 +16,13 @@
 @import "bootstrap";
 @import "jstree-default";
 
-a.commented_file {
+li.normal_file {
+    color: rgba(0,0,0,1) !important;
+}
+li.commented_file {
     color: rgba(155,0,0,1) !important;
 }
-a.directory {
+li.directory {
     color: rgba(155,155,155,1) !important;
 }
 a.goto_line {
@@ -113,11 +116,6 @@ div.destroy_button {
     border: 1px solid black;
     z-index: 99;
     font-size: xx-small;
-}
-div.header {
-    background: rgba(150,200,255,1.0);
-    font-family: sans;
-    font-size: smaller;
 }
 div.repository_name {
     display: block;

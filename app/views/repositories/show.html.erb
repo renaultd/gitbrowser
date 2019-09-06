@@ -2,18 +2,31 @@
 
   <div id="revisions">
     <div>
-      <div class="header">
-        <div class="repository_name">
+      <div>
+        <div class="repository_name bg-primary">
           <%= @repository.name %>
         </div>
-        <a href="#" id="empty_file">Home</a>
-        /
-        <a href="#" id="head_revision">Head</a>
-        /
-        <a href="<%= edit_repository_path(@repository) %>">Edit</a>
-        /
-        <a href="<%= repositories_path %>">Repositories</a>
+        <div class="btn-group btn-group-justified" role="toolbar"
+             style="padding: 5px" aria-label="comment_buttons">
+          <div class="btn-group" role="group">
+            <button id="home_button"  type="button" class="btn btn-success">
+              Home</button>
+          </div>
+          <div class="btn-group" role="group">
+            <button id="head_button"    type="button" class="btn btn-danger">
+              Head</button>
+          </div>
+          <div class="btn-group" role="group">
+            <button id="edit_button" type="button" class="btn btn-primary">
+              Edit</button>
+          </div>
+          <div class="btn-group" role="group">
+            <button id="index_button" type="button" class="btn btn-primary">
+              Index</button>
+          </div>
+        </div>
       </div>
+
       <input type="hidden" id="repository_id"
              value="<%= @repository.id %>"/>
       <input type="hidden" id="revision"
@@ -36,8 +49,8 @@
       </select>
     </div>
 
-    <div id="tree">
-      <ul id="file_tree">
+    <div id="file_tree">
+      <ul id="file_tree_revisions">
       </ul>
     </div>
   </div>
@@ -54,9 +67,21 @@
   <div id="overlays"></div>
 
   <div id="comments">
-    <button id="warning_button">Highlight warning</button>
-    <button id="error_button">Highlight error</button>
-    <button id="toggle_comments">Toggle comments</button>
+    <div class="btn-group btn-group-justified" role="toolbar"
+         style="padding: 5px" aria-label="comment_buttons">
+      <div class="btn-group" role="group">
+        <button id="warning_button"  type="button" class="btn btn-warning">
+          Warning</button>
+      </div>
+      <div class="btn-group" role="group">
+        <button id="error_button"    type="button" class="btn btn-danger">
+          Error</button>
+      </div>
+      <div class="btn-group" role="group">
+        <button id="toggle_comments" type="button" class="btn btn-primary">
+          Toggle</button>
+      </div>
+    </div>
 
     <p></p>
 
@@ -100,16 +125,20 @@
   var base_viewer = ace.edit("viewer_div");
   var comments = {}; // Dict to centralize the comments
   base_viewer.setReadOnly(true);
+  init_file_tree(base_viewer);
 
   <% if @selected_revision %>
     fetch_file_list(base_viewer, "<%= @selected_revision[:sha] %>");
   <% end %>
 
-  $("#head_revision").click(() => load_head_revision(base_viewer));
-  $("#empty_file").click(() => load_empty_file(base_viewer));
+  $("#head_button").click(() => load_head_revision(base_viewer));
+  $("#home_button").click(() => load_empty_file(base_viewer));
+  $("#edit_button").click(() =>
+     window.location.href = "<%= edit_repository_path(@repository) %>");
+  $("#index_button").click(() =>
+     window.location.href = "<%= repositories_path %>");
   $("#warning_button").click(save_new_comment("warning", base_viewer));
   $("#error_button").click(save_new_comment("error", base_viewer));
   $("#closediff_button").click(() => close_diff_view(base_viewer));
   $("#toggle_comments").click(toggle_comments);
-
 </script>
