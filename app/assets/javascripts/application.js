@@ -184,6 +184,7 @@ function goto_line(viewer, id) {
 //    bumpable:   bool
 //    selectable: string    Id of the viewer into which code is selected
 //    detailed:   bool
+//    class:      string
 // }
 function render_comment(id, viewer, options) {
     let comment;
@@ -232,8 +233,7 @@ function render_comment(id, viewer, options) {
         "onclick='append_diff_new_comment(" + id +
         ", ace.edit(\"" + options.selectable + "\"))'>Select</a>";
     }
-    let hclass = comment.visible ?
-        (options.bumpable ? "other_comment" : "visible_comment") : "disabled_comment";
+    let hclass = options.class ? options.class : "visible_comment";
     return $("<div id='comment_" + comment.id + "' " +
              "class='" + hclass + "'>").html(hdiv);
 }
@@ -327,10 +327,12 @@ function append_current_comment(id, div, viewer) {
 }
 // Append a comment for another revision to the list of comments
 function append_other_comment(id, div, viewer) {
+    let comment = comments[id];
     let options = { editable: false,
                     linkable: true };
-    options.bumpable = comments[id].visible &&
-        revision_lt(comments[id].sha, $("#revision").val());
+    options.bumpable = comment.visible &&
+        revision_lt(comment.sha, $("#revision").val());
+    options.class    = comment.visible ? "other_comment" : "disabled_comment";
     $("div#" + div).append(render_comment(id, viewer, options));
 }
 // Append a comment that can be bumped to the list of comments
