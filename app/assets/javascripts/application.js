@@ -195,14 +195,14 @@ function render_comment(id, viewer, options) {
         hdiv = "<div class='show_comment' data-comment='" +
             comment.id + "'>"
         if (options.detailed)
-            hdiv += comment.file + " (" +
-            comment.sha.substring(0,6) + ") : ";
+            hdiv += comment.file + " : ";
         hdiv += comment.description + "</div>";
     }
     if (options.linkable) {
         hdiv += "<a class='goto_line' onclick='load_file_and_revisions(\"" +
             comment.file + "\", \"" + comment.sha + "\", ace.edit(\"" +
             viewer.container.id + "\"))'>rev." + comment.sha.substring(0,6) +
+            ", l. " + (comment.range.start.row+1) + "-" + (comment.range.end.row+1) +
             "</a>";
     } else {
         hdiv += "<a class='goto_line' onclick='goto_line(ace.edit(\"" +
