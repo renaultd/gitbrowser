@@ -166,8 +166,10 @@
           }
       },
   }).autocomplete( "instance" )._renderItem = function( ul, item ) {
+      const cls = (item.sha == $("#revision").val()) ? " class='selected_rev'" : "";
       return $( "<li>" )
-          .append( "<div><span class='ui-menu-sha'>" + item.sha.substring(0,6) +
+          .append( "<div" + cls +
+                   "><span class='ui-menu-sha'>" + item.sha.substring(0,6) +
                    "</span> (" + item.date + ")<br>" +
                    item.author + "&nbsp;: " + item.description + "</div>" )
           .appendTo( ul );
