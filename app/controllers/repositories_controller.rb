@@ -81,6 +81,8 @@ class RepositoriesController < ApplicationController
                     ctype: type)
     if (params[:description])
       c[:description] = params[:description]
+    else
+      c[:description] = "(empty)"
     end
     if (params[:parent_id] && Comment.exists?(params[:parent_id]))
       c[:parent_id] = params[:parent_id]
