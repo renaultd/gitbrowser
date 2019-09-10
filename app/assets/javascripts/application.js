@@ -3,12 +3,19 @@
 //= require bootstrap-sprockets
 //= require ace-rails-ap
 //= require ace/theme-chrome
+//= require jquery-ui/effects/effect-highlight
 //= require jquery-ui/widgets/autocomplete
 //= require jstree
 //= require_tree .
 
 // Global Range object defined in Ace.js
 const Range = require("ace/range").Range;
+
+// Comparison for revisions. The revisions are supposed to be stored
+// chronologically inside the array `revisions`.
+function revision_lt(sha1, sha2) {
+    return revisions.indexOf(sha1) > revisions.indexOf(sha2);
+}
 
 // Function updating the list of files. It's called when selecting the
 // revision `sha`, calling the server for a list of file and filling
@@ -29,9 +36,7 @@ function fetch_file_list(viewer, sha) {
             '?id=' + $("#repository_id").val() +
             '&sha=' + real_sha })
         .done(function(data) {
-            console.log(data);
             $("#revision").val(real_sha);
-            // load_files(data, viewer);
             $('#file_tree').jstree().settings.core.data = data;
             $('#file_tree').jstree(true).deselect_all();
             $("#file_tree").jstree(true).refresh();
@@ -140,7 +145,7 @@ function load_file_and_revisions(filename, sha, viewer) {
 }
 
 function load_head_revision(viewer) {
-    fetch_file_list(viewer, $("#revision_selector option:first").val());
+    fetch_file_list(viewer, revisions[0]);
 }
 
 function load_empty_file(viewer) {
@@ -218,6 +223,9 @@ function render_comment(id, viewer, options) {
         hdiv += " / <a class='goto_line' onClick='bump_comment(ace.edit(\"" +
             viewer.container.id + "\"),\"" +
             comment.file + "\", " + comment.id + ")'>Bump</a>";
+    } else {
+        if (comment.visible && revision_lt(comment.sha, $('#revision').val()))
+            hdiv += ", bumpable";
     }
     if (options.selectable) {
         hdiv += " / <a class='goto_line' " +
@@ -319,10 +327,11 @@ function append_current_comment(id, div, viewer) {
 }
 // Append a comment for another revision to the list of comments
 function append_other_comment(id, div, viewer) {
-    $("div#" + div).append(render_comment(id, viewer,
-                                          { editable: false,
-                                            linkable: true,
-                                            bumpable: comments[id].visible }));
+    let options = { editable: false,
+                    linkable: true };
+    options.bumpable = comments[id].visible &&
+        revision_lt(comments[id].sha, $("#revision").val());
+    $("div#" + div).append(render_comment(id, viewer, options));
 }
 // Append a comment that can be bumped to the list of comments
 function append_diff_old_comment(id, div, base_viewer, side_viewer) {

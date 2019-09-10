@@ -134,6 +134,8 @@
 
   var base_viewer = ace.edit("viewer_div");
   var comments = {}; // Dict to centralize the comments
+  var revisions = JSON.parse('<%= @revisions.pluck(:sha).inspect.html_safe %>');
+
   base_viewer.setReadOnly(true);
   init_file_tree(base_viewer);
 
@@ -156,7 +158,7 @@
       source: JSON.parse('<%= @revisions.to_json.html_safe %>'),
       position: { my : "left top", at: "left bottom" },
       select: function( event, ui ) {
-          const res = ui.item.value;
+          const res = ui.item.sha;
           if (res.length >= 6) {
               $("#revision_selector").val(res);
               $("#revision").val(res);

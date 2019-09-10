@@ -72,6 +72,7 @@ class RepositoriesController < ApplicationController
   def add_comment
     range = JSON.parse(params[:range])
     sha   = params[:sha]
+    raise "SHA ERROR" if sha.length < 8
     file  = params[:file]
     type  = params[:type]
     c = Comment.new(repository_id: @repository.id,
