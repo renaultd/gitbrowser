@@ -15,7 +15,7 @@ class Repository < ApplicationRecord
         author: el.author[:name],
         description: desc,
         date: el.time.strftime("%Y-%m-%d %H:%M") } }
-    return revs.drop(15).take(10)
+    return revs
   end
 
   # Return the list of files in the repository at a given revision,
