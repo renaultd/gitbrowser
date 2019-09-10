@@ -165,7 +165,8 @@ function load_empty_file(viewer) {
                 $("#all_comments_div").
                     append($('<div>').html(
                         render_comment(c, viewer, {
-                            detailed: true, linkable: true })));
+                            detailed: true, linkable: true,
+                            class: c.visible ? "visible_comment" : "disabled_comment" })));
             }
         )});
 }
