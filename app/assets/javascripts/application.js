@@ -549,12 +549,14 @@ function create_overlay(id, viewer) {
 
     $('<div id="overlay_' + id + '" class="viewer_overlay viewer_overlay_' +
       comment.ctype + '">' +
-      '<div class="destroy_button">' +
-      '<a onclick="destroy_comment(' + id + ", ace.edit('" +
-      viewer.container.id + "'))\">&#10060;</a></div>" +
+      '<div class="viewer_overlay_button">' +
+      '<button class="btn btn-xs btn-danger"' +
+      'onclick="destroy_comment(' + id + ", ace.edit('" +
+      viewer.container.id + "'))\">&times;</button></div>" +
+      '<div class="viewer_overlay_text">' +
       '<textarea class="edit_comment" data-comment="' + id +
       '" onkeyup="watch_area(event, this)">' +
-      comment.description + '</textarea>' + '</div>').
+      comment.description + '</textarea></div></div>').
         appendTo('#overlays');
 
     scroll_overlay(id, viewer);

@@ -48,17 +48,31 @@ a.goto_line {
     position:absolute;
     z-index: 100;
     padding: 5px;
+    width: 335px;
+}
+.viewer_overlay_text {
+    float: left;
     width: 300px;
-    border: 1px solid black;
+}
+.viewer_overlay_button {
+    float: right;
+}
+.viewer_overlay_button button {
+    font-size: smaller;
+    opacity: 0.8;
 }
 .viewer_overlay_warning {
     background: rgba(255,255,50,0.4);
+    border-radius: 3px;
+    border: 1px solid orange;
 }
 .viewer_overlay_warning textarea {
     background: rgba(255,255,200,0.7);
 }
 .viewer_overlay_error {
     background: rgba(255,100,75,0.4);
+    border-radius: 3px;
+    border: 1px solid rgba(200,0,0,1);
 }
 .viewer_overlay_error textarea {
     background: rgba(255,220,200,0.5);
@@ -93,12 +107,14 @@ div.viewer_container {
 div.visible_comment {
     background-color:rgba(150,200,255,1.0);
     border: 1px solid gray;
+    border-radius: 3px;
     margin: 3px;
     padding: 5px;
 }
 div.disabled_comment {
     background-color:rgba(235,235,245,1.0);
     border: 1px solid lightgray;
+    border-radius: 3px;
     color: gray;
     margin: 3px;
     padding: 5px;
@@ -109,16 +125,9 @@ div.disabled_comment a {
 div.other_comment {
     background-color:rgba(200,200,215,1.0);
     border: 1px solid gray;
+    border-radius: 3px;
+    padding: 4px;
     margin: 3px;
-}
-div.destroy_button {
-    position:absolute;
-    left:300px; top:-1px;
-    padding: 2px;
-    background: white;
-    border: 1px solid black;
-    z-index: 99;
-    font-size: xx-small;
 }
 div.repository_name {
     display: block;
@@ -131,7 +140,7 @@ div.repository_name {
 textarea.edit_comment {
     display: block;
     width: 100%;
-    border: 1px solid rgba(0,0,0,0.05);
+    border: 1px solid rgba(0,0,0,0.1);
     box-sizing: border-box;
     background-color: transparent;
 }
