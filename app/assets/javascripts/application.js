@@ -166,7 +166,8 @@ function load_empty_file(viewer) {
                     append($('<div>').html(
                         render_comment(c, viewer, {
                             detailed: true, linkable: true,
-                            class: c.visible ? "visible_comment" : "disabled_comment" })));
+                            class: c.visible ? "visible_comment" : "disabled_comment" }
+                                      )));
             }
         )});
 }
@@ -418,14 +419,15 @@ function create_new_comment(comment, viewer) {
 function save_new_comment(type, viewer) {
     return function () {
         const range = viewer.getSelectionRange();
-        $.ajax({
-            dataType: 'json',
-            url: 'add_comment' +
-                '?id=' + $("#repository_id").val() +
-                '&sha=' + $("#revision").val() +
-                "&file=" + $("#filename").val() +
-                "&range=" + JSON.stringify(range) +
-                "&type=" + type})
+        if (!range.isEmpty())
+            $.ajax({
+                dataType: 'json',
+                url: 'add_comment' +
+                    '?id=' + $("#repository_id").val() +
+                    '&sha=' + $("#revision").val() +
+                    "&file=" + $("#filename").val() +
+                    "&range=" + JSON.stringify(range) +
+                    "&type=" + type})
             .done(function(comment) {
                 create_new_comment(comment, viewer);
                 $("#overlay_" + comment["id"] + " textarea").select();
