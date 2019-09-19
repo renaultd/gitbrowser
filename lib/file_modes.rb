@@ -6,6 +6,7 @@ module FileModes
     "h"        => "ace/mode/c_cpp",
     "hpp"      => "ace/mode/c_cpp",
     "html"     => "ace/mode/html",
+    "java"     => "ace/mode/java",
     "js"       => "ace/mode/javascript",
     "Makefile" => "ace/mode/makefile",
     "py"       => "ace/mode/python",

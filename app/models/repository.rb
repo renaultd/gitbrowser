@@ -7,15 +7,19 @@ class Repository < ApplicationRecord
   def revisions
     rugged = self.rugged
     walker = Rugged::Walker.new(rugged)
-    walker.push(rugged.head.target)
-    revs = walker.entries.collect { |el|
-      lines = el.message.lines
-      desc = lines.empty? ? "" : lines.first.strip.gsub(/[\'\"]/, "")
-      { sha: el.oid, value: el.oid[0..6],
-        author: el.author[:name],
-        description: desc,
-        date: el.time.strftime("%Y-%m-%d %H:%M") } }
-    return revs
+    begin
+      walker.push(rugged.head.target)
+      revs = walker.entries.collect { |el|
+        lines = el.message.lines
+        desc = lines.empty? ? "" : lines.first.strip.gsub(/[\'\"]/, "")
+        { sha: el.oid, value: el.oid[0..6],
+          author: el.author[:name],
+          description: desc,
+          date: el.time.strftime("%Y-%m-%d %H:%M") } }
+      return revs
+    rescue
+      return []
+    end
   end
 
   # Return the list of files in the repository at a given revision,
