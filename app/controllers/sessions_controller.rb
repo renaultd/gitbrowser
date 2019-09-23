@@ -20,6 +20,7 @@ class SessionsController < DeviseController
         resource = User.find_by_login(session[:cas_user])
         fail "Incorrect user" if resource.nil?
         sign_in(resource_name, resource)
+        session[:cas_login] = true
         redirect_to(controller: "repositories")
       rescue Exception => e
         if (e.message == "Incorrect user")
@@ -47,10 +48,16 @@ class SessionsController < DeviseController
 
   # DELETE /resource/sign_out
   def destroy
-    signed_out = (Devise.sign_out_all_scopes ? sign_out : sign_out(resource_name))
+    signed_out = (Devise.sign_out_all_scopes ? sign_out :
+                    sign_out(resource_name))
     set_flash_message! :notice, :signed_out if signed_out
-    yield if block_given?
-    respond_to_on_destroy
+    if session[:cas_login]
+      CASClient::Frameworks::Rails::Filter::logout(
+        controller, "https://thor.enseirb-matmeca.fr/")
+    else
+      yield if block_given?
+      respond_to_on_destroy
+    end
   end
 
   protected
