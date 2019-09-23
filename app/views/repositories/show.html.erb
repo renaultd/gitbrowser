@@ -6,7 +6,7 @@
         <div id="loader" style="background-color:red">
           LOADING
         </div>
-        <div class="repository_name bg-primary">
+        <div class="repository_name bg-primary" align="center">
           <%= @repository.name %>
         </div>
         <div class="btn-group btn-group-justified" role="toolbar"
@@ -71,6 +71,14 @@
   <div id="overlays"></div>
 
   <div id="comments">
+    <div class="bg-primary" align="center">
+      <span class="repository_name">
+        <%= current_user.login %>
+      </span>
+      /
+      <%= link_to('Logout', destroy_user_session_path,
+          method: :delete, style: "color:white") %>
+    </div>
     <div class="btn-group btn-group-justified" role="toolbar"
          style="padding: 5px" aria-label="comment_buttons">
       <div class="btn-group" role="group">

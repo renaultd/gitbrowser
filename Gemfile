@@ -21,8 +21,10 @@ gem 'jquery-ui-rails'
 gem 'ace-rails-ap'
 # JsTree for files
 gem 'jstree-rails-4'
-
 gem 'listen'
+
+# Authentication
+gem 'devise'
 
 # For production
 gem 'uglifier'

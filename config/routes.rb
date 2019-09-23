@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  devise_for :users
   # Remember to put the ajax routes *before* the resources
   get '/repositories/add_comment' => "repositories#add_comment"
   get '/repositories/del_comment' => "repositories#del_comment"
