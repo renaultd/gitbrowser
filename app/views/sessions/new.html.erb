@@ -11,6 +11,9 @@
     <%= f.password_field :password, autocomplete: "current-password" %>
   </div>
 
+  <%= button_to "Login with CAS",
+    { controller: :sessions, action: 'new', cas_login: true, } %>
+
   <div class="actions">
     <%= f.submit "Log in" %>
   </div>

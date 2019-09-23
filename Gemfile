@@ -25,6 +25,7 @@ gem 'listen'
 
 # Authentication
 gem 'devise'
+gem 'rubycas-client'
 
 # For production
 gem 'uglifier'

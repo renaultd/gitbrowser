@@ -1,5 +1,12 @@
 Rails.application.routes.draw do
-  devise_for :users
+  # Devise authentication
+  devise_for :users, controllers: { sessions: 'sessions' }, skip: [:sessions]
+  as :user do
+    get 'users/sign_in' => 'sessions#new', :as => :new_user_session
+    post 'users/sign_in' => 'sessions#create', :as => :user_session
+    delete 'users/sign_out' => 'sessions#destroy', :as => :destroy_user_session
+  end
+
   # Remember to put the ajax routes *before* the resources
   get '/repositories/add_comment' => "repositories#add_comment"
   get '/repositories/del_comment' => "repositories#del_comment"
