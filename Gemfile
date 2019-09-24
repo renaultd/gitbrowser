@@ -26,6 +26,9 @@ gem 'listen'
 # Authentication
 gem 'devise'
 gem 'rubycas-client'
+# Authorization
+gem "declarative_authorization",
+    path: "vendor/gems/declarative_authorization-0.5.7"
 
 # For production
 gem 'uglifier'

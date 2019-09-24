@@ -14,7 +14,9 @@
           (filter : <%= r.filter %>)
         </li>
         <% end %>
+        <% permitted_to? :create, :repositories do %>
         <li> <%= link_to("Create new repository", new_repository_path) %>
+        <% end %>
       </ul>
     </div>
   </div>

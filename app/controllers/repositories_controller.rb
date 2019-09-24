@@ -5,6 +5,7 @@ class RepositoriesController < ApplicationController
 
   skip_before_action :verify_authenticity_token
   before_action :load_repository, except: [:create, :index, :new]
+  filter_access_to [ :show ], :attribute_check => true
 
   def new
     @repository = Repository.new

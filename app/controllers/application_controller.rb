@@ -6,4 +6,11 @@ class ApplicationController < ActionController::Base
 
   end
 
+  def permission_denied
+    respond_to do |format|
+        format.html { render file: "public/403.html",
+                             layout: false, status: :forbidden }
+    end
+  end
+
 end
