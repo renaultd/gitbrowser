@@ -2,6 +2,7 @@ class Repository < ApplicationRecord
   validates :address, presence: true
   validates :filter, presence: true
   has_many :comments
+  has_and_belongs_to_many :users, join_table: "user_repositories"
 
   # Return the list of revisions of a repository.
   def revisions

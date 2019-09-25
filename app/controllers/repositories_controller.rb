@@ -21,7 +21,11 @@ class RepositoriesController < ApplicationController
   end
 
   def index
-    @repositories = Repository.all
+    if (current_user.roles.include?(Role.find_by_title("student")))
+      @repositories = current_user.repositories
+    else
+      @repositories = Repository.all
+    end
   end
 
   def show
