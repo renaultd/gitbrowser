@@ -545,6 +545,7 @@ function create_overlay(id, viewer) {
 
     $('<div id="overlay_' + id + '" class="viewer_overlay viewer_overlay_' +
       comment.ctype + '">' +
+      '<div class="hidde_button"><a onclick="$(\'#overlay_'+id+'\').addClass(\'hidden\');">&#x1f441;</a></div>' +
       '<div class="destroy_button">' +
       '<a onclick="destroy_comment(' + id + ", ace.edit('" +
       viewer.container.id + "'))\">&#10060;</a></div>" +

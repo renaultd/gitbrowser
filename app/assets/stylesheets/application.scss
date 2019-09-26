@@ -120,6 +120,15 @@ div.destroy_button {
     z-index: 99;
     font-size: xx-small;
 }
+div.hidde_button {
+    position:absolute;
+    left:300px; top:20px;
+    padding: 2px;
+    background: white;
+    border: 1px solid black;
+    z-index: 99;
+    font-size: xx-small;
+}
 div.repository_name {
     display: block;
     text-align: center;
