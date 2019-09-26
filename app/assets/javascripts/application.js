@@ -31,9 +31,11 @@ function fetch_file_list(viewer, sha) {
         .done(function(data) {
             $("#revision").val(real_sha);
             // load_files(data, viewer);
-            $('#file_tree').jstree().settings.core.data = data;
-            $('#file_tree').jstree(true).deselect_all();
-            $("#file_tree").jstree(true).refresh();
+            jstree = $('#file_tree').jstree();
+            jstree.settings.core.data = data;
+            jstree.deselect_all();
+            jstree.refresh();
+
             const file = $("#filename").val();
             if (file) { load_file(file, real_sha, viewer, true);
             } else { load_empty_file(viewer); }
@@ -100,11 +102,17 @@ function init_file_tree(viewer) {
       },"plugins" : [ "types" ]
   });
   $('#file_tree').on("refresh.jstree", function (e, data) {
-      $('#file_tree').jstree(true).open_all();
+      jstree = data.instance;
+      jstree.open_node(
+          jstree.get_json('#', {flat:true}).
+          filter(function(file) { return file.type == 'commented-file'; }).
+          map(function(file) { return jstree.get_node(file).parents; }));
   });
   $('#file_tree').on("select_node.jstree", function (e, data) {
       if (data.node.li_attr.class != "directory")
           load_file(data.node.id, $("#revision").val(), viewer, true);
+      else
+          data.instance.open_node(data.selected);
   });
 }
 
