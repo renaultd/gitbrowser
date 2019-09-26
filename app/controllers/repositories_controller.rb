@@ -26,6 +26,7 @@ class RepositoriesController < ApplicationController
   def show
     @selected_file = params[:file]
     @revisions = @repository.revisions
+    @revisions.unshift @revisions.first.merge({sha: "HEAD", value: "HEAD"}) unless @revisions.empty?
     if params[:sha] and params[:sha] != "null"
       possibles = @revisions.select { |r|
         r[:sha].start_with?(params[:sha]) }

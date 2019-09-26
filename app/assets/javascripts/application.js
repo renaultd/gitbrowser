@@ -112,7 +112,7 @@ function init_file_tree(viewer) {
       if (data.node.li_attr.class != "directory")
           load_file(data.node.id, $("#revision").val(), viewer, true);
       else
-          data.instance.open_node(data.selected);
+          data.instance.toggle_node(data.selected);
   });
 }
 
