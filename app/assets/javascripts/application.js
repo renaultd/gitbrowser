@@ -105,8 +105,8 @@ function init_file_tree(viewer) {
       jstree = data.instance;
       jstree.open_node(
           jstree.get_json('#', {flat:true}).
-          filter(function(file) { return file.type == 'commented-file'; }).
-          map(function(file) { return jstree.get_node(file).parents; }));
+          filter((file) => file.type == 'commented-file').
+          map((file) => jstree.get_node(file).parents));
   });
   $('#file_tree').on("select_node.jstree", function (e, data) {
       if (data.node.li_attr.class != "directory")
@@ -569,8 +569,5 @@ function destroy_overlay(id, viewer) {
 
 // Toggle the visibility of the overlays.
 function toggle_comments() {
-    if ($("#overlays").css("display") == "block")
-        $("#overlays").css("display", "none");
-    else
-        $("#overlays").css("display", "block");
+    $(".viewer_overlay").toggleClass("hidden");
 }
