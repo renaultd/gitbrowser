@@ -12,7 +12,5 @@ authorization do
       to [ :show ]
       if_attribute :users => contains { user }
     end
-
   end
-
 end

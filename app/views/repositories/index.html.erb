@@ -10,7 +10,8 @@
       <ul>
         <% @repositories.all.each do |r| %>
         <li>
-          <%= link_to r.address, repository_path(r) %>
+          <%= link_to r.name, repository_path(r) %>
+          <%= r.address %>
           (filter : <%= r.filter %>)
         </li>
         <% end %>
